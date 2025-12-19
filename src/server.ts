@@ -26,6 +26,7 @@ export async function start() {
 
   // Health Check
   app.get("/health", async () => ({ status: "ok" }));
+  app.get("/", async () => ({ status: "Playmaster Backend Running", service: "API" }));
 
   // Rutas
   await app.register(rankingRoutes);
