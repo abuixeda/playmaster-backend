@@ -15,9 +15,10 @@ import { Profile } from './components/Profile';
 import { SimulationPayment } from './components/SimulationPayment';
 import { AdminDashboard } from './components/views/AdminDashboard';
 
-// Connect to backend (assuming port 3005)
+// Connect to backend
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4001';
 const token = localStorage.getItem('token');
-const socket: Socket = io('http://localhost:3005', {
+const socket: Socket = io(API_URL, {
   auth: { token }
 });
 

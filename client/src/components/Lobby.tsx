@@ -40,8 +40,10 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoin, onOpenProfile, socket }) =
             ? { emailOrUsername: authEmail, password: authPass }
             : { email: authEmail, username: playerName, password: authPass };
 
+        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4001';
+
         try {
-            const res = await fetch('http://localhost:3001' + endpoint, {
+            const res = await fetch(API_URL + endpoint, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
