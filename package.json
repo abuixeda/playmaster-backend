@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch src/boot.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/boot.js",
     "prisma:migrate": "prisma migrate dev",
     "prisma:generate": "prisma generate",
     "prisma:studio": "prisma studio",
