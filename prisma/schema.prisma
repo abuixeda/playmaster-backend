@@ -1,0 +1,116 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+//
+// ==================== ENUMS ====================
+//
+enum GameStatus {
+  WAITING
+  ACTIVE
+  FINISHED
+}
+
+//
+// ==================== MODELS ====================
+//
+model User {
+  id           String   @id @default(uuid())
+  email        String   @unique
+  username     String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  
+  avatarUrl    String?
+  bio          String?
+  country      String?
+
+  gamePlayers  GamePlayer[]
+  wallet       Wallet?
+  bets         BetLock[]
+  WalletLedger WalletLedger[]
+
+  elo          Int      @default(1200)
+  role         String   @default("USER")  // "USER" | "ADMIN"
+}
+
+model GameDefinition {
+  id         String   @id @default(uuid())
+  code       String   @unique // Ej: "TRUCO", "POOL", "UNO"
+  name       String
+  isActive   Boolean  @default(true)
+  minPlayers Int
+  maxPlayers Int
+  rules      Json?
+  version    Int      @default(1)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+}
+
+model Game {
+  id       String     @id @default(uuid())
+  typeCode String
+  status     GameStatus
+  gameState  Json?      // Estado actual del tablero / partida
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @default(now())
+
+  players GamePlayer[]
+  bets    BetLock[]
+}
+
+model GamePlayer {
+  id        String   @id @default(uuid())
+  gameId    String
+  userId    String
+  score     Int      @default(0)
+  createdAt DateTime @default(now())
+
+  game Game @relation(fields: [gameId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+
+  @@unique([gameId, userId])
+  @@index([gameId])
+  @@index([userId])
+}
+
+model Wallet {
+  id        String   @id @default(uuid())
+  userId    String   @unique
+  balance   Int      @default(0)
+  updatedAt DateTime @updatedAt
+
+  user   User           @relation(fields: [userId], references: [id])
+  ledger WalletLedger[]
+}
+
+model WalletLedger {
+  id        String   @id @default(uuid())
+  walletId  String
+  userId    String 
+  amount    Int
+  type      String // "BET" | "DEPOSIT" | "WITHDRAW"
+  createdAt DateTime @default(now())
+
+  wallet Wallet @relation(fields: [walletId], references: [id])
+  user   User   @relation(fields: [userId], references: [id])
+}
+
+model BetLock {
+  id         String   @id @default(uuid())
+  gameId     String
+  userId     String
+  onPlayerId String
+  amount     Int
+  status     String
+  createdAt  DateTime @default(now())
+
+  game Game @relation(fields: [gameId], references: [id])
+  user User @relation(fields: [userId], references: [id])
+}

@@ -1,0 +1,360 @@
+@base = http://127.0.0.1:3000
+
+# ==========================
+# VARS AUTO (FLUJO FIJO)
+# ==========================
+@tokenA_fixed = {{loginA_fixed.response.body.token}}
+@tokenB_fixed = {{loginB_fixed.response.body.token}}
+@userIdA_fixed = {{meA_fixed.response.body.id}}
+@userIdB_fixed = {{meB_fixed.response.body.id}}
+@gameId_fixed = {{createFixed.response.body.id}}
+@settledAt_fixed = {{finishFixed1.response.body.settledAt}}
+
+### Ping
+GET {{base}}/
+
+
+# ==========================
+# AUTH (FIJO)
+# ==========================
+### @name registerA_fixed
+POST {{base}}/api/auth/register
+Content-Type: application/json
+
+{"email":"a_fixed@test.com","username":"playerA_fixed","password":"123456"}
+
+### @name registerB_fixed
+POST {{base}}/api/auth/register
+Content-Type: application/json
+
+{"email":"b_fixed@test.com","username":"playerB_fixed","password":"123456"}
+
+### @name loginA_fixed
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"emailOrUsername":"a_fixed@test.com","password":"123456"}
+
+### @name loginB_fixed
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"emailOrUsername":"b_fixed@test.com","password":"123456"}
+
+### @name meA_fixed
+GET {{base}}/api/auth/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImZmNGI0ODgwLTljMzItNGYzZi1hZmNmLTI0Mzg5OTIyYjU2YyIsImlhdCI6MTc2NTA4Mjc4OCwiZXhwIjoxNzY1Njg3NTg4fQ.ByIaxm_g92lB9IVqcUMTW4KV9SmEDfSW46CA_k5Ngbk
+
+### @name meB_fixed
+GET {{base}}/api/auth/me
+Authorization: Bearer eeyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI5NTA5MjEyLTljN2EtNDM1Mi05Y2Q1LWFjYjY0YWE5ODA2ZCIsImlhdCI6MTc2NTA4MjkxMCwiZXhwIjoxNzY1Njg3NzEwfQ.PnS7lPYjDOlzcc9v7SgnZswY3Cac0ezlnU4fWqHnKm4
+
+
+# ==============================
+# (OPCIONAL) DEPÓSITOS (FIJO)
+# ==============================
+### @name depositA_fixed
+POST {{base}}/api/wallet/deposit
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImZmNGI0ODgwLTljMzItNGYzZi1hZmNmLTI0Mzg5OTIyYjU2YyIsImlhdCI6MTc2NTA4Mjc4OCwiZXhwIjoxNzY1Njg3NTg4fQ.ByIaxm_g92lB9IVqcUMTW4KV9SmEDfSW46CA_k5Ngbk
+Content-Type: application/json
+
+{"amount":1000000}
+
+### @name depositB_fixed
+POST {{base}}/api/wallet/deposit
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI5NTA5MjEyLTljN2EtNDM1Mi05Y2Q1LWFjYjY0YWE5ODA2ZCIsImlhdCI6MTc2NTA4MjkxMCwiZXhwIjoxNzY1Njg3NzEwfQ.PnS7lPYjDOlzcc9v7SgnZswY3Cac0ezlnU4fWqHnKm4
+Content-Type: application/json
+
+{"amount":1000000}
+
+
+# ==========================
+# CREATE / JOIN / BETS (FIJO)
+# ==========================
+### @name createFixed
+POST {{base}}/api/games
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImZmNGI0ODgwLTljMzItNGYzZi1hZmNmLTI0Mzg5OTIyYjU2YyIsImlhdCI6MTc2NTA4Mjc4OCwiZXhwIjoxNzY1Njg3NTg4fQ.ByIaxm_g92lB9IVqcUMTW4KV9SmEDfSW46CA_k5Ngbk
+Content-Type: application/json
+
+{
+  "typeCode":"TRUCO",
+  "roomMode":"FIXED",
+  "presetStake":50000
+}
+
+### @name debugGameId
+GET {{base}}/api/games/4127754b-c689-40a1-a765-e42e6d2eb35e
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImZmNGI0ODgwLTljMzItNGYzZi1hZmNmLTI0Mzg5OTIyYjU2YyIsImlhdCI6MTc2NTA4Mjc4OCwiZXhwIjoxNzY1Njg3NTg4fQ.ByIaxm_g92lB9IVqcUMTW4KV9SmEDfSW46CA_k5Ngbk
+
+
+### @name joinA_fixed
+POST {{base}}/api/games/4127754b-c689-40a1-a765-e42e6d2eb35e/join
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImZmNGI0ODgwLTljMzItNGYzZi1hZmNmLTI0Mzg5OTIyYjU2YyIsImlhdCI6MTc2NTA4Mjc4OCwiZXhwIjoxNzY1Njg3NTg4fQ.ByIaxm_g92lB9IVqcUMTW4KV9SmEDfSW46CA_k5Ngbk
+Content-Type: application/json
+
+{}
+
+### @name joinB_fixed
+POST {{base}}/api/games/4127754b-c689-40a1-a765-e42e6d2eb35e/join
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI5NTA5MjEyLTljN2EtNDM1Mi05Y2Q1LWFjYjY0YWE5ODA2ZCIsImlhdCI6MTc2NTA4MjkxMCwiZXhwIjoxNzY1Njg3NzEwfQ.PnS7lPYjDOlzcc9v7SgnZswY3Cac0ezlnU4fWqHnKm4
+Content-Type: application/json
+
+{}
+
+### betA_fixed
+POST http://127.0.0.1:3000/api/games/4127754b-c689-40a1-a765-e42e6d2eb35e/bets
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImZmNGI0ODgwLTljMzItNGYzZi1hZmNmLTI0Mzg5OTIyYjU2YyIsImlhdCI6MTc2NTA4Mjc4OCwiZXhwIjoxNzY1Njg3NTg4fQ.ByIaxm_g92lB9IVqcUMTW4KV9SmEDfSW46CA_k5Ngbk
+Content-Type: application/json
+
+{
+  "amount": 50000,
+  "onPlayerId": "ff4b4880-9c32-4f3f-afcf-24389922b56c"
+}
+
+
+### betB_fixed
+POST http://127.0.0.1:3000/api/games/4127754b-c689-40a1-a765-e42e6d2eb35e/bets
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI5NTA5MjEyLTljN2EtNDM1Mi05Y2Q1LWFjYjY0YWE5ODA2ZCIsImlhdCI6MTc2NTA4MjkxMCwiZXhwIjoxNzY1Njg3NzEwfQ.PnS7lPYjDOlzcc9v7SgnZswY3Cac0ezlnU4fWqHnKm4
+Content-Type: application/json
+
+{
+  "amount": 50000,
+  "onPlayerId": "29509212-9c7a-4352-9cd5-acb64aa9806d"
+}
+
+
+# ==========================
+# SCORES / FINISH (FIJO)
+# ==========================
+### @name scoreFixedA
+POST {{base}}/api/games/{{gameId_fixed}}/score
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImZmNGI0ODgwLTljMzItNGYzZi1hZmNmLTI0Mzg5OTIyYjU2YyIsImlhdCI6MTc2NTA4Mjc4OCwiZXhwIjoxNzY1Njg3NTg4fQ.ByIaxm_g92lB9IVqcUMTW4KV9SmEDfSW46CA_k5Ngbk
+Content-Type: application/json
+
+{"userId":"{{userIdA_fixed}}","score":30}
+
+### @name scoreFixedB
+POST {{base}}/api/games/{{gameId_fixed}}/score
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjI5NTA5MjEyLTljN2EtNDM1Mi05Y2Q1LWFjYjY0YWE5ODA2ZCIsImlhdCI6MTc2NTA4MjA4NywiZXhwIjoxNzY1Njg2ODg3fQ.GeKtjRne-BQso4WF1EAOimotvo3U8yY5-tL30e4dEj8
+Content-Type: application/json
+
+{"userId":"{{userIdB_fixed}}","score":15}
+
+### @name finishFixed1
+POST {{base}}/api/games/{{gameId_fixed}}/finish
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImM5Yzc1ODdiLTZiYjgtNDJmMC1iMmU1LTE4YjBmM2FhZWZmNCIsImlhdCI6MTc2NTA3MDM5NywiZXhwIjoxNzY1Njc1MTk3fQ.SUcNEhgRFc--MkKQA16jHWYl_nOBNutnYWI7_wHJToE
+Content-Type: application/json
+
+{"scoreA":30,"scoreB":15}
+
+### @name finishFixed2_idempotent
+POST {{base}}/api/games/{{gameId_fixed}}/finish
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjVjNDFkNjU4LTVkYmItNDVmMC1hZWVkLTg2Mjk1Y2QxYThiNCIsImlhdCI6MTc2NTA3MDU3MywiZXhwIjoxNzY1Njc1MzczfQ.m5mZ0E-XABz_13dbP6oWDwlbaJfIES0DKwYUMm6hydI
+Content-Type: application/json
+
+{"scoreA":30,"scoreB":15}
+
+
+# ==========================
+# WALLETS (FIJO)
+# ==========================
+### @name walletFixedA
+GET {{base}}/api/wallet/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6ImM5Yzc1ODdiLTZiYjgtNDJmMC1iMmU1LTE4YjBmM2FhZWZmNCIsImlhdCI6MTc2NTA3MDM5NywiZXhwIjoxNzY1Njc1MTk3fQ.SUcNEhgRFc--MkKQA16jHWYl_nOBNutnYWI7_wHJToE
+
+### @name walletFixedB
+GET {{base}}/api/wallet/me
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjhlOWY2N2EzLTY5ODEtNDQ4Yy05ODFhLWNjYTYzOGMxZTE5MCIsImlhdCI6MTc2NDkxNDU4NCwiZXhwIjoxNzY1NTE5Mzg0fQ.kDMz4VIMYSuXE0FXP_KX96M8-NXmhr6GVRTvRaEXdM8
+
+
+
+# =========================================================
+# FLUJO 2: SALAS PERSONALIZADAS (CUSTOM STAKE)
+# =========================================================
+
+# ==========================
+# VARS AUTO (CUSTOM)
+# ==========================
+@tokenA_c   = {{loginA_c.response.body.token}}
+@tokenB_c   = {{loginB_c.response.body.token}}
+@userIdA_c  = {{meA_c.response.body.id}}
+@userIdB_c  = {{meB_c.response.body.id}}
+@gameId_c   = {{createCustom.response.body.id}}
+@settledAt_c = {{finishCustom1.response.body.settledAt}}
+
+@ts_c = {{$timestamp}}
+
+# Usuarios para CUSTOM (A fijo, B dinámico)
+@userA_email = a_fixed@test.com
+@userA_name  = playerA_fixed
+@userB_email = b_custom{{ts_c}}@test.com
+@userB_name  = playerB_custom_{{ts_c}}
+
+
+# --------------------------
+# AUTH (CUSTOM)
+# --------------------------
+### @name registerB_c
+POST {{base}}/api/auth/register
+Content-Type: application/json
+
+{"email":"{{userB_email}}","username":"{{userB_name}}","password":"123456"}
+
+### @name loginA_c
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"emailOrUsername":"{{userA_email}}","password":"123456"}
+
+### @name loginB_c
+POST {{base}}/api/auth/login
+Content-Type: application/json
+
+{"emailOrUsername":"{{userB_email}}","password":"123456"}
+
+### @name meA_c
+GET {{base}}/api/auth/me
+Authorization: Bearer {{tokenA_c}}
+
+### @name meB_c
+GET {{base}}/api/auth/me
+Authorization: Bearer {{tokenB_c}}
+
+
+# --------------------------
+# DEPÓSITOS (CUSTOM, opcional)
+# --------------------------
+### @name depositA_c
+POST {{base}}/api/wallet/deposit
+Authorization: Bearer {{tokenA_c}}
+Content-Type: application/json
+
+{"amount":1000000}
+
+### @name depositB_c
+POST {{base}}/api/wallet/deposit
+Authorization: Bearer {{tokenB_c}}
+Content-Type: application/json
+
+{"amount":1000000}
+
+
+# --------------------------
+# CREAR SALA CUSTOM
+# --------------------------
+### @name createCustom
+POST {{base}}/api/games
+Authorization: Bearer {{tokenA_c}}
+Content-Type: application/json
+
+{
+  "typeCode": "TRUCO",
+  "roomMode": "CUSTOM",
+  "customStake": 75000
+}
+
+### @name joinA_c
+POST {{base}}/api/games/{{gameId_c}}/join
+Authorization: Bearer {{tokenA_c}}
+Content-Type: application/json
+
+{}
+
+### @name joinB_c
+POST {{base}}/api/games/{{gameId_c}}/join
+Authorization: Bearer {{tokenB_c}}
+Content-Type: application/json
+
+{}
+
+
+# --------------------------
+# APUESTAS CUSTOM
+# --------------------------
+### @name betA_c
+POST {{base}}/api/bets
+Authorization: Bearer {{tokenA_c}}
+Content-Type: application/json
+
+{
+  "gameId": "{{gameId_c}}",
+  "amount": 75000,
+  "onPlayerId": "{{userIdA_c}}"
+}
+
+### @name betB_c
+POST {{base}}/api/bets
+Authorization: Bearer {{tokenB_c}}
+Content-Type: application/json
+
+{
+  "gameId": "{{gameId_c}}",
+  "amount": 75000,
+  "onPlayerId": "{{userIdB_c}}"
+}
+
+
+# --------------------------
+# SCORES + FINISH CUSTOM
+# --------------------------
+### @name scoreA_c
+POST {{base}}/api/games/{{gameId_c}}/score
+Authorization: Bearer {{tokenA_c}}
+Content-Type: application/json
+
+{"userId":"{{userIdA_c}}","score":30}
+
+### @name scoreB_c
+POST {{base}}/api/games/{{gameId_c}}/score
+Authorization: Bearer {{tokenB_c}}
+Content-Type: application/json
+
+{"userId":"{{userIdB_c}}","score":15}
+
+### @name finishCustom1
+POST {{base}}/api/games/{{gameId_c}}/finish
+Authorization: Bearer {{tokenA_c}}
+Content-Type: application/json
+
+{"scoreA":30,"scoreB":15}
+
+### @name finishCustom2
+POST {{base}}/api/games/{{gameId_c}}/finish
+Authorization: Bearer {{tokenA_c}}
+Content-Type: application/json
+
+{"scoreA":30,"scoreB":15}
+
+
+# --------------------------
+# WALLETS + HISTORIAL + RANKING (reusable)
+# --------------------------
+
+### @name walletA
+GET {{base}}/api/wallet/me
+Authorization: Bearer {{tokenA_c}}
+
+### @name walletB
+GET {{base}}/api/wallet/me
+Authorization: Bearer {{tokenB_c}}
+
+### @name historyA
+GET {{base}}/api/games/history?me=true&limit=10
+Authorization: Bearer {{tokenA_c}}
+
+### @name historyB
+GET {{base}}/api/games/history?me=true&limit=10
+Authorization: Bearer {{tokenB_c}}
+
+### @name rankingDefault
+GET {{base}}/api/ranking/global
+Authorization: Bearer {{tokenA_c}}
+
+### @name rankingWeekly
+GET {{base}}/api/ranking/global?period=7d
+Authorization: Bearer {{tokenA_c}}
+
+### @name rankingAllTime
+GET {{base}}/api/ranking/global?period=all&limit=100
+Authorization: Bearer {{tokenA_c}}
+

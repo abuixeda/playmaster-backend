@@ -1,0 +1,206 @@
+--- LATEST USERS ---
+[
+  {
+    "id": "43345421-8e30-4e8a-8018-f448ad1c855a",
+    "email": "electrosavageargentina@gmail.com",
+    "username": "electro savage",
+    "passwordHash": "$2b$10$RzWBZ9KMjZu.UtvVhLHlYOTXQSWVFu6JEI9ZkbipBm42OjAoWlvC2",
+    "createdAt": "2025-12-15T23:07:40.932Z",
+    "wallet": {
+      "id": "001b25d3-90b3-4ea1-8424-e722829f764e",
+      "userId": "43345421-8e30-4e8a-8018-f448ad1c855a",
+      "balance": 0,
+      "updatedAt": "2025-12-15T23:07:40.932Z"
+    }
+  },
+  {
+    "id": "08f5b59f-45ff-4c50-b116-6b178512c015",
+    "email": "ayrtonbuixeda07@gmail.com",
+    "username": "amulak",
+    "passwordHash": "$2b$10$yWqqeiLWzkg/Y2NCh0yO0uozXTQBkbKcEsh/hvWtgsJ2.HSmkAlaG",
+    "createdAt": "2025-12-15T22:59:54.850Z",
+    "wallet": {
+      "id": "9cd33718-e4e9-4811-8780-06054f461b50",
+      "userId": "08f5b59f-45ff-4c50-b116-6b178512c015",
+      "balance": 0,
+      "updatedAt": "2025-12-15T22:59:54.850Z"
+    }
+  },
+  {
+    "id": "be15ef4f-6b2a-4bf7-8428-0bb78ec9c682",
+    "email": "repo_user_1765837372400@test.com",
+    "username": "repo_user_1765837372400",
+    "passwordHash": "hash",
+    "createdAt": "2025-12-15T22:22:52.426Z",
+    "wallet": {
+      "id": "1ef31423-10fc-4e82-a83f-c90e8ca1e994",
+      "userId": "be15ef4f-6b2a-4bf7-8428-0bb78ec9c682",
+      "balance": 400,
+      "updatedAt": "2025-12-15T22:22:52.453Z"
+    }
+  },
+  {
+    "id": "68921684-826d-418f-b786-bf16526c5079",
+    "email": "test_1765837168709@example.com",
+    "username": "user_1765837168709",
+    "passwordHash": "hashed_secret",
+    "createdAt": "2025-12-15T22:19:28.719Z",
+    "wallet": {
+      "id": "39512f0b-ee00-4a13-a924-fd3755b5521d",
+      "userId": "68921684-826d-418f-b786-bf16526c5079",
+      "balance": 1000,
+      "updatedAt": "2025-12-15T22:19:28.719Z"
+    }
+  }
+]
+
+--- LATEST GAMES ---
+[
+  {
+    "id": "6GV7HB",
+    "typeCode": "RPS",
+    "status": "WAITING",
+    "gameState": {
+      "players": {
+        "43345421-8e30-4e8a-8018-f448ad1c855a": {
+          "choice": "ROCK",
+          "score": 0
+        },
+        "08f5b59f-45ff-4c50-b116-6b178512c015": {
+          "choice": "PAPER",
+          "score": 2
+        }
+      },
+      "winner": "08f5b59f-45ff-4c50-b116-6b178512c015",
+      "status": "FINISHED",
+      "round": 3,
+      "roundWinner": "08f5b59f-45ff-4c50-b116-6b178512c015",
+      "history": [
+        {
+          "winner": "08f5b59f-45ff-4c50-b116-6b178512c015",
+          "p1Choice": "PAPER",
+          "p2Choice": "SCISSORS"
+        },
+        {
+          "winner": "08f5b59f-45ff-4c50-b116-6b178512c015",
+          "p1Choice": "ROCK",
+          "p2Choice": "PAPER"
+        }
+      ]
+    },
+    "createdAt": "2025-12-16T00:10:01.521Z",
+    "updatedAt": "2025-12-16T00:10:01.521Z",
+    "players": [
+      {
+        "id": "12ca88ec-5a56-475b-9ce7-a604b2307ccb",
+        "gameId": "6GV7HB",
+        "userId": "08f5b59f-45ff-4c50-b116-6b178512c015",
+        "score": 0,
+        "createdAt": "2025-12-16T00:10:09.296Z"
+      },
+      {
+        "id": "7ec303e2-9c1e-4034-b520-30e73c1019cb",
+        "gameId": "6GV7HB",
+        "userId": "43345421-8e30-4e8a-8018-f448ad1c855a",
+        "score": 0,
+        "createdAt": "2025-12-16T00:10:01.526Z"
+      }
+    ]
+  },
+  {
+    "id": "SJYAP3",
+    "typeCode": "RPS",
+    "status": "WAITING",
+    "gameState": {},
+    "createdAt": "2025-12-16T00:06:36.253Z",
+    "updatedAt": "2025-12-16T00:06:36.253Z",
+    "players": [
+      {
+        "id": "78268fdf-b97a-46b9-be11-dfa0d5232cbe",
+        "gameId": "SJYAP3",
+        "userId": "08f5b59f-45ff-4c50-b116-6b178512c015",
+        "score": 0,
+        "createdAt": "2025-12-16T00:06:46.167Z"
+      },
+      {
+        "id": "63cad7b6-b14b-43c5-9350-7e75a4340bcc",
+        "gameId": "SJYAP3",
+        "userId": "43345421-8e30-4e8a-8018-f448ad1c855a",
+        "score": 0,
+        "createdAt": "2025-12-16T00:06:36.258Z"
+      }
+    ]
+  },
+  {
+    "id": "GVIX26",
+    "typeCode": "RPS",
+    "status": "WAITING",
+    "gameState": {},
+    "createdAt": "2025-12-16T00:02:32.702Z",
+    "updatedAt": "2025-12-16T00:02:32.702Z",
+    "players": [
+      {
+        "id": "8c32c4f4-abc4-428c-8374-0720622ed092",
+        "gameId": "GVIX26",
+        "userId": "08f5b59f-45ff-4c50-b116-6b178512c015",
+        "score": 0,
+        "createdAt": "2025-12-16T00:02:38.885Z"
+      },
+      {
+        "id": "2d0e8219-9925-4095-b087-7ab815617073",
+        "gameId": "GVIX26",
+        "userId": "43345421-8e30-4e8a-8018-f448ad1c855a",
+        "score": 0,
+        "createdAt": "2025-12-16T00:02:32.707Z"
+      }
+    ]
+  },
+  {
+    "id": "7DBLMP",
+    "typeCode": "RPS",
+    "status": "WAITING",
+    "gameState": {},
+    "createdAt": "2025-12-16T00:00:27.966Z",
+    "updatedAt": "2025-12-16T00:00:27.966Z",
+    "players": [
+      {
+        "id": "abda2d13-05ad-4903-9969-b9d7a7c62634",
+        "gameId": "7DBLMP",
+        "userId": "08f5b59f-45ff-4c50-b116-6b178512c015",
+        "score": 0,
+        "createdAt": "2025-12-16T00:00:35.869Z"
+      },
+      {
+        "id": "250ab38e-d796-432a-9db0-111484a399ce",
+        "gameId": "7DBLMP",
+        "userId": "43345421-8e30-4e8a-8018-f448ad1c855a",
+        "score": 0,
+        "createdAt": "2025-12-16T00:00:27.971Z"
+      }
+    ]
+  },
+  {
+    "id": "LMECMY",
+    "typeCode": "RPS",
+    "status": "WAITING",
+    "gameState": {},
+    "createdAt": "2025-12-15T23:59:30.151Z",
+    "updatedAt": "2025-12-15T23:59:30.151Z",
+    "players": [
+      {
+        "id": "0eed0b70-d9d1-4cc2-bf5a-421de3fed4c5",
+        "gameId": "LMECMY",
+        "userId": "08f5b59f-45ff-4c50-b116-6b178512c015",
+        "score": 0,
+        "createdAt": "2025-12-15T23:59:39.325Z"
+      },
+      {
+        "id": "a2a3fea4-2568-4fa5-8dcb-092282849ae9",
+        "gameId": "LMECMY",
+        "userId": "43345421-8e30-4e8a-8018-f448ad1c855a",
+        "score": 0,
+        "createdAt": "2025-12-15T23:59:30.156Z"
+      }
+    ]
+  }
+]
