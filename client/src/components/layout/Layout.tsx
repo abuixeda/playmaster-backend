@@ -19,8 +19,8 @@ export function Layout({ children }: LayoutProps) {
                 }}
             />
 
-            {/* Content Container - Mobile Optimized */}
-            <div className="relative z-10 w-full max-w-md mx-auto min-h-screen flex flex-col pb-24">
+            {/* Content Container - Responsive */}
+            <div className="relative z-10 w-full md:max-w-full md:px-8 mx-auto min-h-screen flex flex-col pb-24 md:pb-0">
                 {children}
             </div>
         </div>

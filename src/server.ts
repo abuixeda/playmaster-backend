@@ -33,8 +33,12 @@ export async function start() {
   // 2. Rate Limiting
   await app.register(rateLimit, {
     max: 100, // Max 100 requests
-    timeWindow: '1 minute',
-    allowList: ['127.0.0.1'] // Allow local testing
+    timeWindow: '1 minute'
+  });
+
+  // GLOBAL REQUEST LOGGER
+  app.addHook('onRequest', async (req, reply) => {
+    console.log(`[REQ] ${req.method} ${req.url} from ${req.ip}`);
   });
 
   // 3. CORS

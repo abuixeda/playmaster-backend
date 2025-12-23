@@ -241,7 +241,7 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
     }
 
     return (
-        <div className="flex flex-col gap-6 animate-fade-in pt-4 pb-20">
+        <div className="flex flex-col gap-6 animate-fade-in pt-4 pb-20 max-w-7xl mx-auto w-full">
             <div className="flex items-center justify-between">
                 <div>
                     <h1 className="text-xl font-bold text-white">
@@ -336,12 +336,12 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
                     <h3 className="font-semibold text-base text-white">Juegos Destacados</h3>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6">
                     {games.map(game => (
                         <div
                             key={game.id}
                             onClick={() => game.active && handlePlayParams(game.id)}
-                            className={`relative aspect-[3/4] rounded-2xl overflow-hidden cursor-pointer group shadow-lg transition-transform active:scale-95 ${!game.active ? 'grayscale opacity-60' : ''}`}
+                            className={`relative aspect-[3/4] md:aspect-[4/5] rounded-2xl overflow-hidden cursor-pointer group shadow-lg transition-transform active:scale-95 hover:scale-[1.02] ${!game.active ? 'grayscale opacity-60' : ''}`}
                         >
                             {game.image ? (
                                 <img src={game.image} className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" />

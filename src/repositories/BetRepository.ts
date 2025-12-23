@@ -52,4 +52,104 @@ export class BetRepository {
             where: { gameId }
         });
     }
+
+    /**
+     * Settles bets for a completed game.
+     * Distributes winnings to those who bet on the winner.
+     * Losers get nothing.
+     * @param gameId 
+     * @param winnerId 
+     */
+    static async settleBets(gameId: string, winnerId: string): Promise<void> {
+        return prisma.$transaction(async (tx) => {
+            const bets = await tx.betLock.findMany({
+                where: { gameId, status: "PENDING" }
+            });
+
+            for (const b of bets) {
+                if (b.onPlayerId === winnerId) {
+                    // WINNER
+                    // Commission: 2.5% of total pot (amount * 2)
+                    // Payout: (amount * 2) * 0.975
+                    const totalPot = b.amount * 2;
+                    const commission = Math.floor(totalPot * 0.025);
+                    const payout = totalPot - commission;
+
+                    const w = await tx.wallet.upsert({
+                        where: { userId: b.userId },
+                        create: { userId: b.userId, balance: 0 },
+                        update: {},
+                        select: { id: true }
+                    });
+
+                    await tx.wallet.update({
+                        where: { id: w.id },
+                        data: { balance: { increment: payout } }
+                    });
+
+                    await tx.walletLedger.create({
+                        data: {
+                            walletId: w.id,
+                            userId: b.userId,
+                            amount: payout,
+                            type: "BET_CREDIT"
+                        }
+                    });
+
+                    await tx.betLock.update({
+                        where: { id: b.id },
+                        data: { status: "WON" }
+                    });
+
+                } else {
+                    // LOSER
+                    await tx.betLock.update({
+                        where: { id: b.id },
+                        data: { status: "LOST" }
+                    });
+                }
+            }
+        });
+    }
+
+    /**
+     * Refunds all pending bets for a game.
+     * Used for TIEs or cancelled games.
+     * @param gameId 
+     */
+    static async refundBets(gameId: string): Promise<void> {
+        return prisma.$transaction(async (tx) => {
+            const bets = await tx.betLock.findMany({
+                where: { gameId, status: "PENDING" }
+            });
+
+            for (const b of bets) {
+                const w = await tx.wallet.upsert({
+                    where: { userId: b.userId },
+                    create: { userId: b.userId, balance: 0 },
+                    update: {},
+                    select: { id: true }
+                });
+
+                await tx.wallet.update({
+                    where: { id: w.id },
+                    data: { balance: { increment: b.amount } }
+                });
+
+                await tx.walletLedger.create({
+                    data: {
+                        walletId: w.id,
+                        userId: b.userId,
+                        amount: b.amount,
+                        type: "BET_REFUND"
+                    }
+                });
+
+                await tx.betLock.update({
+                    where: { id: b.id },
+                    data: { status: "VOID" }
+                });
+            }
+        });
+    }
 }

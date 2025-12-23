@@ -1,4 +1,6 @@
 import prisma from "../lib/prisma";
+import { BetRepository } from "../repositories/BetRepository";
+
 
 export class GameService {
     /**
@@ -10,63 +12,18 @@ export class GameService {
         if (amount <= 0) return true; // Free game
 
         try {
-            await prisma.$transaction(async (tx: any) => {
-                // Process Player 1
-                const w1 = await tx.wallet.findUnique({ where: { userId: p1Id } });
-                if (!w1 || w1.balance < amount) throw new Error(`Player ${p1Id} insufficient funds`);
+            // Attempt P1
+            await BetRepository.placeBet(gameId, p1Id, p1Id, amount);
 
-                await tx.wallet.update({
-                    where: { userId: p1Id },
-                    data: { balance: { decrement: amount } }
-                });
+            try {
+                // Attempt P2
+                await BetRepository.placeBet(gameId, p2Id, p2Id, amount);
+            } catch (p2Error) {
+                console.error(`[GameService] Player 2 (${p2Id}) failed to bet. Refunding P1.`);
+                await BetRepository.refundBets(gameId); // Safe to call, voids P1's pending bet
+                throw p2Error;
+            }
 
-                await tx.walletLedger.create({
-                    data: {
-                        walletId: w1.id,
-                        userId: p1Id,
-                        amount: -amount,
-                        type: "BET_LOCK"
-                    }
-                });
-
-                await tx.betLock.create({
-                    data: {
-                        gameId,
-                        userId: p1Id,
-                        onPlayerId: p1Id, // Betting on self
-                        amount: amount,
-                        status: "PENDING"
-                    }
-                });
-
-                // Process Player 2
-                const w2 = await tx.wallet.findUnique({ where: { userId: p2Id } });
-                if (!w2 || w2.balance < amount) throw new Error(`Player ${p2Id} insufficient funds`);
-
-                await tx.wallet.update({
-                    where: { userId: p2Id },
-                    data: { balance: { decrement: amount } }
-                });
-
-                await tx.walletLedger.create({
-                    data: {
-                        walletId: w2.id,
-                        userId: p2Id,
-                        amount: -amount,
-                        type: "BET_LOCK"
-                    }
-                });
-
-                await tx.betLock.create({
-                    data: {
-                        gameId,
-                        userId: p2Id,
-                        onPlayerId: p2Id, // Betting on self
-                        amount: amount,
-                        status: "PENDING"
-                    }
-                });
-            });
             console.log(`[GameService] Bets locked successfully for ${gameId}`);
             return true;
         } catch (error) {
@@ -94,94 +51,19 @@ export class GameService {
             winnerId = await this.getWinnerUserId(gameId);
         }
 
+        // Settle Bets (Idempotent call)
+        if (winnerId === null || winnerId === "TIE") {
+            console.log(`[GameService] Refund logic for ${gameId}`);
+            await BetRepository.refundBets(gameId);
+        } else {
+            console.log(`[GameService] Winner determined: ${winnerId} for game ${gameId}`);
+            await BetRepository.settleBets(gameId, winnerId);
+        }
+
         const result = await prisma.$transaction(async (tx: any) => {
-            const bets = await tx.betLock.findMany({
-                where: { gameId: gameId, status: "PENDING" },
-                select: { id: true, userId: true, amount: true, onPlayerId: true },
-            });
+            // (Note: Bets settled outside this transaction via BetRepository)
 
-            if (bets.length > 0) {
-                console.log(`[GameService] Found ${bets.length} pending bets for game ${gameId}`);
-                if (winnerId === null || winnerId === "TIE") {
-                    console.log(`[GameService] Refund logic for ${gameId}`);
-                    // Refund
-                    for (const b of bets) {
-                        const w = await tx.wallet.upsert({
-                            where: { userId: b.userId },
-                            create: { userId: b.userId, balance: 0 },
-                            update: {},
-                            select: { id: true },
-                        });
-
-                        await tx.wallet.update({
-                            where: { id: w.id },
-                            data: { balance: { increment: b.amount } },
-                        });
-
-                        await tx.walletLedger.create({
-                            data: {
-                                walletId: w.id,
-                                userId: b.userId,
-                                amount: b.amount,
-                                type: "BET_REFUND",
-                            },
-                        });
-
-                        await tx.betLock.update({
-                            where: { id: b.id },
-                            data: { status: "VOID" },
-                        });
-                    }
-                } else {
-                    console.log(`[GameService] Winner determined: ${winnerId} for game ${gameId}`);
-                    // Winner determined
-                    for (const b of bets) {
-                        // Check if user bet on the winner
-                        // Logic: if I bet on player X, and X is winnerId -> I win.
-                        if (b.onPlayerId === winnerId) {
-                            const w = await tx.wallet.upsert({
-                                where: { userId: b.userId },
-                                create: { userId: b.userId, balance: 0 },
-                                update: {},
-                                select: { id: true },
-                            });
-
-                            // COMMISSION LOGIC: 2.5% of the TOTAL POT (which is amount * 2)
-                            // User receives: (amount * 2) * (1 - 0.025)
-                            const totalPot = b.amount * 2;
-                            const commission = Math.floor(totalPot * 0.025);
-                            const payout = totalPot - commission;
-
-                            await tx.wallet.update({
-                                where: { id: w.id },
-                                data: { balance: { increment: payout } },
-                            });
-
-                            await tx.walletLedger.create({
-                                data: {
-                                    walletId: w.id,
-                                    userId: b.userId,
-                                    amount: payout,
-                                    type: "BET_CREDIT", // Maybe "WIN_PAYOUT" better? Keeping consistent.
-                                },
-                            });
-
-                            // Optional: Record commission? For now just implicitly taken.
-
-
-                            await tx.betLock.update({
-                                where: { id: b.id },
-                                data: { status: "WON" },
-                            });
-                        } else {
-                            await tx.betLock.update({
-                                where: { id: b.id },
-                                data: { status: "LOST" },
-                            });
-                        }
-                    }
-                }
-            }
+            // Update scores logic remains here
 
             // ---------------------------------------------------------
             // PERSIEST PLAYER SCORES (New Logic for History)

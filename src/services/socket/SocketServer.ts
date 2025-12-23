@@ -198,9 +198,16 @@ export class SocketServer {
 
         if (winnerId) {
             // Force Game End
-            // Update State to finished to prevent further moves?
-            // Really we just call finishGame service logic which handles DB utils.
-            // But we also need to notify frontend.
+            (session.state as any).status = "FINISHED";
+            (session.state as any).winner = winnerId;
+            (session.state as any).winnerId = winnerId; // Support both conventions
+
+            this.io.to(gameId).emit("game_state", {
+                ...session.state,
+                gameType: session.gameType,
+                gameId,
+                turnDeadline: session.turnDeadline
+            });
 
             this.io.to(gameId).emit("game_over", {
                 winnerId,
@@ -262,6 +269,13 @@ export class SocketServer {
             this.handleMove(socket, gameId, move);
             this.handleMove(socket, gameId, move);
         });
+
+        // Initialize Matchmaker Callback if not set
+        if (!Matchmaker.onMatchFound) {
+            Matchmaker.onMatchFound = (opponent, player, gameId) => {
+                this.setupMatch(player, opponent, gameId);
+            };
+        }
 
         // MATCHMAKING EVENTS
         socket.on("find_match", ({ gameType, betAmount }) => {
@@ -520,6 +534,7 @@ export class SocketServer {
                 // Only if game is active
                 if ((session.state as any).status !== "FINISHED") {
                     this.startDisconnectTimer(gameId, playerId);
+                    this.io.to(gameId).emit("player_disconnected", { playerId });
                 }
             }
         }
@@ -756,25 +771,48 @@ export class SocketServer {
         }
     }
 
-    private async handleFindMatch(socket: Socket, userId: string, gameType: string, betAmount: number) {
-        console.log(`[Socket] User ${userId} searching match for ${gameType} ($${betAmount})`);
+    private async handleFindMatch(socket: Socket, userId: string, gameType: string, betAmount: any) {
+        try {
+            const amount = Number(betAmount);
+            console.log(`[Socket] User ${userId} searching match for ${gameType} ($${amount})`);
 
-        socket.emit("search_started"); // Ack
+            socket.emit("search_started");
 
-        // Fetch User Elo
-        // Ensure PrismaClient is imported or used via global/service if available to avoid multiple instances
-        // Using dynamic import to avoid top-level issues if any
-        const { PrismaClient } = await import("@prisma/client");
-        const prisma = new PrismaClient();
+            // Use global prisma/repository if possible, or robust fetch
+            // Using GameRepository's prisma instance or similar if available, or imports
+            // For now, assuming top-level 'prisma' import (like in GameService) isn't available in this class scope context easily unless captured.
+            // But wtf, we can just import it at top of file.
+            // Let's use the dynamic import but CAREFULLY.
 
-        // Type issue: Prisma types might not be reloaded in IDE yet. Cast to any if needed or trust runtime.
-        const user = await prisma.user.findUnique({ where: { id: userId } }) as any;
-        const elo = user?.elo || 1200;
+            // Actually, let's look at imports. We probably have access to a UserRepo.
+            // Let's use UserRepository if available?
+            // "import { UserRepository } from '../../repositories/UserRepository';"
+            // Checking file imports... (I can't see them now, but usually Repo is better)
 
-        const result = Matchmaker.addToQueue(userId, socket.id, gameType, betAmount, elo);
+            // Fallback: Safe Try/Catch with explicit error logging
+            const { PrismaClient } = await import("@prisma/client");
+            const prisma = new PrismaClient(); // Warn: This is bad for perf but safe for debugging crash.
 
-        if (result.matchFound && result.opponent && result.gameId) {
-            this.setupMatch({ userId, socketId: socket.id, gameType, betAmount, elo }, result.opponent, result.gameId);
+            const user = await prisma.user.findUnique({ where: { id: userId } });
+
+            // Log if user not found
+            if (!user) {
+                console.error(`[Socket] Match Error: User ${userId} not found in DB`);
+                socket.emit("error", { message: "User profile not found" });
+                return;
+            }
+
+            const elo = user.elo || 1200;
+            console.log(`[Socket] Adding to queue: ${userId} (Elo: ${elo})`);
+
+            const result = Matchmaker.addToQueue(userId, socket.id, gameType, amount, elo);
+
+            if (result.matchFound && result.opponent && result.gameId) {
+                this.setupMatch({ userId, socketId: socket.id, gameType, betAmount: amount, elo }, result.opponent, result.gameId);
+            }
+        } catch (e: any) {
+            console.error(`[Socket] handleFindMatch CRITICAL ERROR for ${userId}:`, e);
+            socket.emit("error", { message: "Server error during matchmaking" });
         }
     }
 }

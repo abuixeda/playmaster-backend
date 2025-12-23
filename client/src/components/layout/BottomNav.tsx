@@ -15,7 +15,7 @@ export function BottomNav({ currentView, onChangeView }: BottomNavProps) {
     ];
 
     return (
-        <div className="fixed bottom-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none">
+        <div className="fixed bottom-4 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none md:hidden">
             <div className="pointer-events-auto bg-[--color-surface-glass] backdrop-blur-xl border border-[--color-surface-glass-border] rounded-2xl px-2 py-3 flex items-center shadow-2xl shadow-purple-900/20 max-w-sm w-full justify-between">
                 {navItems.map((item) => {
                     const isActive = currentView === item.id;

@@ -103,6 +103,12 @@ export const PoolGame: React.FC<PoolGameProps> = ({ gameState, playerId, gameId,
     // We need to be careful not to jitter if we are simulating locally.
     useEffect(() => {
         if (!engineRef.current) return;
+
+        // If server says shot is over, unlock local sim
+        if (!gameState.shotInProgress && isSimulating.current) {
+            isSimulating.current = false;
+        }
+
         // Check local simulation flag AND server flag
         if (!gameState.shotInProgress && !isSimulating.current) {
             updateBallsFromState(gameState.balls);
@@ -237,6 +243,8 @@ export const PoolGame: React.FC<PoolGameProps> = ({ gameState, playerId, gameId,
     useEffect(() => {
         socket.on("pool_shot", (data: { angle: number, force: number, playerId: string }) => {
             if (data.playerId !== playerId) {
+                // LOCK SYNC immediately to prevent state update from clobbering velocity
+                isSimulating.current = true;
                 applyForceToCue(data.angle, data.force);
             }
         });

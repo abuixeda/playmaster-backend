@@ -13,29 +13,38 @@ export class ChessLogic {
             const chess = this.recoverGame(stateJSON);
             let result = null;
 
+            // 1. Try exact move
             try {
-                // 1. Try exact move
+                // console.log("Trying exact move:", move);
                 result = chess.move({
                     from: move.from,
                     to: move.to,
                     promotion: move.promotion
                 });
             } catch (e) {
-                // 2. Fallback: If failed and promotion was provided, try without it
-                if (move.promotion) {
-                    try {
-                        result = chess.move({
-                            from: move.from,
-                            to: move.to
-                        });
-                    } catch (e2) {
-                        // Still failed
-                        result = null;
-                    }
+                // console.log("Exact move threw exception");
+            }
+
+            // 2. Fallback: If failed (null or threw) and promotion was provided, try without it
+            if (!result && move.promotion) {
+                // console.log("Attempting fallback without promotion");
+                try {
+                    result = chess.move({
+                        from: move.from,
+                        to: move.to
+                    });
+                    // console.log("Fallback result:", result);
+                } catch (e2) {
+                    // console.log("Fallback threw exception:", e2);
+                    result = null;
                 }
             }
 
-            if (!result) return "Invalid move";
+            if (!result) {
+                console.error("ChessLogic: result is null for move", move);
+                // console.error("Valid moves:", chess.moves());
+                return "Invalid move";
+            }
             return null;
 
         } catch (e) {
@@ -56,19 +65,22 @@ export class ChessLogic {
                 promotion: move.promotion
             });
         } catch (e) {
-            // Fallback: Retrying without promotion if it failed
-            if (move.promotion) {
-                try {
-                    moveResult = chess.move({
-                        from: move.from,
-                        to: move.to
-                    });
-                } catch (e2) {
-                    console.error("ChessLogic ApplyMove Fallback Error:", e2);
-                }
-            } else {
-                console.error("ChessLogic ApplyMove Error:", e);
+            // Ignore exception
+        }
+
+        // Fallback: Retrying without promotion if it failed
+        if (!moveResult && move.promotion) {
+            try {
+                moveResult = chess.move({
+                    from: move.from,
+                    to: move.to
+                });
+            } catch (e2) {
+                console.error("ChessLogic ApplyMove Fallback Error:", e2);
             }
+        } else if (!moveResult) {
+            // It failed and we didn't have promotion, or we threw above. 
+            // Logic below handles !moveResult
         }
 
         if (!moveResult) {

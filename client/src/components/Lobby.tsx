@@ -180,10 +180,11 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoin, onOpenProfile, socket }) =
                 <div className="absolute bottom-[-10%] right-[-10%] w-96 h-96 bg-blue-600/30 rounded-full blur-3xl"></div>
             </div>
 
-            <div className="z-10 bg-white/10 backdrop-blur-lg border border-white/20 p-8 rounded-2xl shadow-2xl w-full max-w-md relative">
+            {/* Main Card Container */}
+            <div className="z-10 bg-white/10 backdrop-blur-lg border border-white/20 p-8 rounded-2xl shadow-2xl w-full max-w-md md:max-w-4xl relative transition-all duration-300">
 
-                {/* Auth Check */}
-                <div className="absolute top-4 right-4">
+                {/* Auth Check - Hide on Desktop (Sidebar handles it) */}
+                <div className="absolute top-4 right-4 md:hidden">
                     {authUser ? (
                         <div className="flex items-center gap-4">
                             <div className="flex items-center gap-2 bg-slate-800/80 px-3 py-1 rounded-full border border-yellow-500/30 shadow-inner">
@@ -219,12 +220,16 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoin, onOpenProfile, socket }) =
                     )}
                 </div>
 
-                <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 text-center mb-8 mt-4">
-                    PlayMaster
-                </h1>
+                {/* Title Section */}
+                <div className="text-center mb-8 mt-4 md:text-left md:mb-12">
+                    <h1 className="text-4xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400 inline-block">
+                        PlayMaster
+                    </h1>
+                    <p className="text-slate-400 text-sm mt-1 hidden md:block">Seleccioná tu juego y empezá a ganar.</p>
+                </div>
 
                 {showLogin ? (
-                    <div className="space-y-4">
+                    <div className="space-y-4 max-w-sm mx-auto">
                         <div className="flex gap-2 justify-center mb-4">
                             <button onClick={() => setAuthMode('LOGIN')} className={`px-4 py-1 rounded-full ${authMode === 'LOGIN' ? 'bg-purple-500 text-white' : 'bg-slate-700 text-slate-400'}`}>Login</button>
                             <button onClick={() => setAuthMode('REGISTER')} className={`px-4 py-1 rounded-full ${authMode === 'REGISTER' ? 'bg-purple-500 text-white' : 'bg-slate-700 text-slate-400'}`}>Registro</button>
@@ -250,154 +255,162 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoin, onOpenProfile, socket }) =
                         </div>
                     </div>
                 ) : (
-                    <div className="space-y-6">
-                        {!authUser && (
-                            <div>
-                                <label className="block text-sm font-medium text-slate-300 mb-1">Tu Nombre (Invitado)</label>
-                                <input
-                                    type="text"
-                                    className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
-                                    placeholder="Ej. El Mas Capito"
-                                    value={playerName}
-                                    onChange={(e) => setPlayerName(e.target.value)}
-                                />
-                            </div>
-                        )}
+                    /* Desktop Grid Layout */
+                    <div className="flex flex-col md:grid md:grid-cols-2 md:gap-12">
 
-                        <div>
-                            <label className="block text-sm font-medium text-slate-300 mb-2">Elegí el Juego</label>
-                            <div className="grid grid-cols-2 gap-2">
-                                <button
-                                    onClick={() => setSelectedGame('TRUCO')}
-                                    className={`py-2 px-4 rounded-lg border transition-all ${selectedGame === 'TRUCO' ? 'bg-blue-600 border-blue-400 text-white' : 'bg-slate-800 border-slate-600 text-slate-400 hover:bg-slate-700'}`}
-                                >
-                                    🃏 Truco
-                                </button>
-                                <button
-                                    onClick={() => setSelectedGame('CHESS')}
-                                    className={`py-2 px-4 rounded-lg border transition-all ${selectedGame === 'CHESS' ? 'bg-blue-600 border-blue-400 text-white' : 'bg-slate-800 border-slate-600 text-slate-400 hover:bg-slate-700'}`}
-                                >
-                                    ♟️ Ajedrez
-                                </button>
-                                <button
-                                    onClick={() => setSelectedGame('RPS')}
-                                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${selectedGame === 'RPS'
-                                        ? 'border-purple-500 bg-purple-500/20 text-white'
-                                        : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-500'
-                                        }`}
-                                >
-                                    <span className="text-3xl">✂️</span>
-                                    <span className="font-bold text-sm">PPT</span>
-                                </button>
-                                {/* Pool Suspended
-                                <button
-                                    onClick={() => setSelectedGame('POOL')}
-                                    className={`p-4 rounded-xl border-2 transition-all flex flex-col items-center gap-2 ${selectedGame === 'POOL'
-                                        ? 'border-green-500 bg-green-500/20 text-white'
-                                        : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-500'
-                                        }`}
-                                >
-                                    <span className="text-3xl">🎱</span>
-                                    <span className="font-bold text-sm">Pool</span>
-                                </button>
-                                */}
-                            </div>
-                        </div>
-
-                        <div className="relative">
-                            <div className="absolute inset-0 flex items-center">
-                                <div className="w-full border-t border-slate-600"></div>
-                            </div>
-                            <div className="relative flex justify-center text-sm">
-                                <span className="px-2 bg-slate-900/0 text-slate-400 backdrop-blur-sm">Opciones de Sala</span>
-                            </div>
-                        </div>
-
-                        {!isSearching ? (
-                            <div className="space-y-4">
+                        {/* LEFT COL: Game Selection */}
+                        <div className="space-y-6">
+                            {!authUser && (
                                 <div>
-                                    <label className="block text-sm font-medium text-slate-300 mb-2">Monto de la Apuesta</label>
-                                    <div className="grid grid-cols-3 gap-2 mb-2">
-                                        {[100, 500, 1000].map(amount => (
-                                            <button
-                                                key={amount}
-                                                onClick={() => setBetAmount(amount)}
-                                                className={`py-2 rounded-lg font-bold border transition-all ${betAmount === amount
-                                                    ? 'bg-yellow-600 border-yellow-400 text-white'
-                                                    : 'bg-slate-800 border-slate-600 text-slate-400 hover:border-yellow-500/50'
-                                                    }`}
-                                            >
-                                                ${amount}
-                                            </button>
-                                        ))}
-                                    </div>
-                                    <div className="relative">
-                                        <span className="absolute left-3 top-2 text-slate-500">$</span>
-                                        <input
-                                            type="number"
-                                            placeholder="Otro monto..."
-                                            className="w-full bg-slate-800 border border-slate-600 rounded-lg pl-6 pr-3 py-2 text-white focus:outline-none focus:border-yellow-500"
-                                            onChange={(e) => setBetAmount(Number(e.target.value))}
-                                            value={betAmount || ''}
-                                        />
-                                    </div>
-                                </div>
-
-                                <button
-                                    onClick={handleFindMatch}
-                                    disabled={!betAmount}
-                                    className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transform transition-all ${betAmount
-                                        ? 'bg-gradient-to-r from-green-500 to-green-700 hover:scale-105 text-white'
-                                        : 'bg-slate-700 text-slate-500 cursor-not-allowed'
-                                        }`}
-                                >
-                                    BUSCAR PARTIDA
-                                </button>
-
-                                <div className="text-center">
-                                    <span className="text-xs text-slate-500">O jugá con un amigo</span>
-                                </div>
-
-                                <button
-                                    onClick={handleCreate}
-                                    className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-bold py-3 rounded-xl transition-all"
-                                >
-                                    CREAR SALA PRIVADA
-                                </button>
-
-                                <div className="text-center text-xs text-slate-500 mb-1">
-                                    o ingresá código
-                                </div>
-
-                                <div className="flex gap-2">
+                                    <label className="block text-sm font-medium text-slate-300 mb-1">Tu Nombre (Invitado)</label>
                                     <input
                                         type="text"
-                                        className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-3 py-2 text-white placeholder-slate-500 text-center uppercase font-mono"
-                                        placeholder="CÓDIGO"
-                                        value={gameId}
-                                        onChange={(e) => setGameId(e.target.value)}
+                                        className="w-full bg-slate-800/50 border border-slate-600 rounded-lg px-4 py-3 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                                        placeholder="Ej. El Mas Capito"
+                                        value={playerName}
+                                        onChange={(e) => setPlayerName(e.target.value)}
                                     />
+                                </div>
+                            )}
+
+                            <div>
+                                <label className="block text-sm font-medium text-slate-300 mb-3 uppercase tracking-wider text-xs">Juegos Disponibles</label>
+                                <div className="grid grid-cols-2 gap-3">
                                     <button
-                                        onClick={handleJoin}
-                                        className="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-4 rounded-xl"
+                                        onClick={() => setSelectedGame('TRUCO')}
+                                        className={`p-4 rounded-xl border transition-all flex flex-col items-center justify-center gap-2 aspect-square ${selectedGame === 'TRUCO' ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-900/40 scale-105' : 'bg-slate-800 border-slate-600 text-slate-400 hover:bg-slate-700 hover:border-slate-500'}`}
                                     >
-                                        Unirse
+                                        <span className="text-4xl">🃏</span>
+                                        <span className="font-bold">Truco</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setSelectedGame('CHESS')}
+                                        className={`p-4 rounded-xl border transition-all flex flex-col items-center justify-center gap-2 aspect-square ${selectedGame === 'CHESS' ? 'bg-blue-600 border-blue-400 text-white shadow-lg shadow-blue-900/40 scale-105' : 'bg-slate-800 border-slate-600 text-slate-400 hover:bg-slate-700 hover:border-slate-500'}`}
+                                    >
+                                        <span className="text-4xl">♟️</span>
+                                        <span className="font-bold">Ajedrez</span>
+                                    </button>
+                                    <button
+                                        onClick={() => setSelectedGame('RPS')}
+                                        className={`p-4 rounded-xl border transition-all flex flex-col items-center justify-center gap-2 aspect-square ${selectedGame === 'RPS'
+                                            ? 'border-purple-500 bg-purple-500/20 text-white shadow-lg shadow-purple-900/40 scale-105'
+                                            : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-500'
+                                            }`}
+                                    >
+                                        <span className="text-4xl">✂️</span>
+                                        <span className="font-bold">PPT</span>
                                     </button>
                                 </div>
                             </div>
-                        ) : (
-                            <div className="text-center py-8 space-y-4 animate-pulse">
-                                <div className="text-4xl">🔍</div>
-                                <h2 className="text-xl font-bold text-white">Buscando Rival...</h2>
-                                <p className="text-slate-400">Apuesta: ${betAmount}</p>
-                                <button
-                                    onClick={handleCancelSearch}
-                                    className="text-red-400 underline hover:text-red-300 text-sm"
-                                >
-                                    Cancelar Búsqueda
-                                </button>
+                        </div>
+
+                        {/* RIGHT COL: Actions */}
+                        <div className="flex flex-col justify-between">
+
+                            <div className="relative md:hidden my-6">
+                                <div className="absolute inset-0 flex items-center">
+                                    <div className="w-full border-t border-slate-600"></div>
+                                </div>
+                                <div className="relative flex justify-center text-sm">
+                                    <span className="px-2 bg-slate-900/0 text-slate-400 backdrop-blur-sm">Opciones de Sala</span>
+                                </div>
                             </div>
-                        )}
+
+                            {/* Desktop Divider */}
+                            <div className="hidden md:block mb-4">
+                                <label className="block text-sm font-medium text-slate-300 mb-3 uppercase tracking-wider text-xs">Configuración de Partida</label>
+                            </div>
+
+                            {!isSearching ? (
+                                <div className="space-y-6 flex-1 flex flex-col">
+                                    <div>
+                                        <label className="block text-sm font-medium text-slate-300 mb-2">Monto de la Apuesta</label>
+                                        <div className="grid grid-cols-3 gap-2 mb-2">
+                                            {[100, 500, 1000].map(amount => (
+                                                <button
+                                                    key={amount}
+                                                    onClick={() => setBetAmount(amount)}
+                                                    className={`py-2 rounded-lg font-bold border transition-all ${betAmount === amount
+                                                        ? 'bg-yellow-600 border-yellow-400 text-white'
+                                                        : 'bg-slate-800 border-slate-600 text-slate-400 hover:border-yellow-500/50'
+                                                        }`}
+                                                >
+                                                    ${amount}
+                                                </button>
+                                            ))}
+                                        </div>
+                                        <div className="relative">
+                                            <span className="absolute left-3 top-2 text-slate-500">$</span>
+                                            <input
+                                                type="number"
+                                                placeholder="Otro monto..."
+                                                className="w-full bg-slate-800 border border-slate-600 rounded-lg pl-6 pr-3 py-2 text-white focus:outline-none focus:border-yellow-500"
+                                                onChange={(e) => setBetAmount(Number(e.target.value))}
+                                                value={betAmount || ''}
+                                            />
+                                        </div>
+                                    </div>
+
+                                    <div className="space-y-3 mt-auto">
+                                        <button
+                                            onClick={handleFindMatch}
+                                            disabled={!betAmount}
+                                            className={`w-full py-4 rounded-xl font-bold text-lg shadow-lg transform transition-all flex items-center justify-center gap-2 ${betAmount
+                                                ? 'bg-gradient-to-r from-green-500 to-green-700 hover:scale-105 text-white shadow-green-900/50'
+                                                : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                                                }`}
+                                        >
+                                            <span>🔍</span> BUSCAR PARTIDA
+                                        </button>
+
+                                        <div className="flex items-center gap-2 text-xs text-slate-500 my-2">
+                                            <div className="h-px bg-slate-700 flex-1"></div>
+                                            <span>O con amigos</span>
+                                            <div className="h-px bg-slate-700 flex-1"></div>
+                                        </div>
+
+                                        <div className="grid grid-cols-2 gap-3">
+                                            <button
+                                                onClick={handleCreate}
+                                                className="bg-slate-800 hover:bg-slate-700 border border-slate-600 text-slate-300 font-bold py-3 rounded-xl transition-all text-sm"
+                                            >
+                                                CREAR PRIVADA
+                                            </button>
+                                            <div className="flex gap-2">
+                                                <input
+                                                    type="text"
+                                                    className="w-full bg-slate-800/50 border border-slate-600 rounded-l-xl px-2 py-2 text-white placeholder-slate-500 text-center uppercase font-mono text-sm"
+                                                    placeholder="CÓDIGO"
+                                                    value={gameId}
+                                                    onChange={(e) => setGameId(e.target.value)}
+                                                />
+                                                <button
+                                                    onClick={handleJoin}
+                                                    className="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-3 rounded-r-xl text-sm"
+                                                >
+                                                    Unirse
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            ) : (
+                                <div className="text-center py-12 space-y-6 animate-pulse flex flex-col items-center justify-center h-full bg-slate-800/30 rounded-xl border border-dashed border-slate-600">
+                                    <div className="text-6xl animate-bounce">🔍</div>
+                                    <div>
+                                        <h2 className="text-2xl font-bold text-white">Buscando Rival...</h2>
+                                        <p className="text-slate-400 mt-2">Apuesta: <span className="text-yellow-400 font-mono">${betAmount}</span></p>
+                                        <p className="text-xs text-slate-500 mt-1">Juego: {selectedGame}</p>
+                                    </div>
+                                    <button
+                                        onClick={handleCancelSearch}
+                                        className="text-red-400 underline hover:text-red-300 text-sm mt-4 cursor-pointer z-20"
+                                    >
+                                        Cancelar Búsqueda
+                                    </button>
+                                </div>
+                            )}
+                        </div>
                     </div>
                 )}
 

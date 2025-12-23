@@ -32,6 +32,7 @@ export default async function walletRoutes(app: FastifyInstance) {
   // BALANCE / ME: saldo + últimos movimientos
   app.get("/api/wallet/me", { preHandler: [requireAuth] }, async (req, reply) => {
     const userId = req.user!.id;
+    console.log(`[WALLET_DEBUG] Fetching balance for UserID: ${userId}`);
     const wallet = await ensureWallet(userId);
 
     const last = await prisma.walletLedger.findMany({
@@ -41,6 +42,7 @@ export default async function walletRoutes(app: FastifyInstance) {
       select: { id: true, type: true, amount: true, createdAt: true }
     });
 
+    console.log(`[WALLET_DEBUG] Balance found: ${wallet.balance}`);
     return reply.send({ balance: wallet.balance, currency: "cents", last });
   });
 

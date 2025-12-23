@@ -1,25 +1,34 @@
 
-import { PrismaClient } from "@prisma/client";
+import { PrismaClient } from '@prisma/client';
 
 const prisma = new PrismaClient();
 
+const USERNAME_FILTERS = [
+    "eldylandevarela",
+    "amulak",
+    "electro savage"
+];
+
 async function main() {
-    console.log("=== Checking User Balances ===");
+    console.log("🔍 Verificando saldos en Base de Datos...");
 
     const users = await prisma.user.findMany({
-        include: { wallet: true }
+        where: {
+            username: { in: USERNAME_FILTERS, mode: 'insensitive' }
+        },
+        include: {
+            wallet: true
+        }
     });
 
-    if (users.length === 0) {
-        console.log("No users found.");
-        return;
+    console.log(`Encontrados: ${users.length} usuarios.`);
+
+    for (const u of users) {
+        console.log(`👤 User: ${u.username}`);
+        console.log(`   💰 Wallet Balance: $${u.wallet?.balance ?? 'NO WALLET'}`);
     }
-
-    users.forEach(u => {
-        console.log(`User: ${u.username} (${u.id})`);
-        console.log(`- Elo: ${u.elo}`);
-        console.log(`- Balance: ${u.wallet?.balance}`);
-    });
 }
 
-main();
+main()
+    .catch(console.error)
+    .finally(() => prisma.$disconnect());

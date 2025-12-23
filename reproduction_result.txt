@@ -1,0 +1,15 @@
+--- Chess Repro Start ---
+Initial FEN: rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1
+Setup complete. Current FEN: rnbqkbnr/pppp1ppp/8/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R b KQkq - 1 2
+
+Testing: Standard move with unwanted promotion (Knight)
+Move: {"from":"b8","to":"c6","promotion":"q"}
+==> Result: SUCCESS
+Applied Move FEN: r1bqkbnr/pppp1ppp/2n5/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 2 3
+
+Testing: Standard move with unwanted promotion (Pawn)
+Move: {"from":"d7","to":"d6","promotion":"q"}
+==> Result: SUCCESS
+Applied Move FEN: rnbqkbnr/ppp2ppp/3p4/4p3/4P3/5N2/PPPP1PPP/RNBQKB1R w KQkq - 0 3
+
+Done

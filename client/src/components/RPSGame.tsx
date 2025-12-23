@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Socket } from 'socket.io-client';
 import { TurnTimer } from './TurnTimer';
+import { ChatBox } from './ChatBox';
 
 interface RPSGameProps {
     gameState: any;
@@ -34,14 +35,80 @@ export const RPSGame: React.FC<RPSGameProps> = ({ gameState, playerId, gameId, s
     const [showRematchButton, setShowRematchButton] = useState(false);
     const prevStatusRef = useRef<string>(gameState.status);
 
+    // Disconnect Logic (Moved Up)
+    const [opponentDisconnected, setOpponentDisconnected] = useState(false);
+
+    // Disconnect Timer State
+    const [disconnectTimer, setDisconnectTimer] = useState(30);
+
+    useEffect(() => {
+        const handleDisconnect = ({ playerId: disconnectedId }: { playerId: string }) => {
+            if (disconnectedId !== playerId) {
+                setOpponentDisconnected(true);
+            }
+        };
+
+        const handleReconnect = ({ playerId: joinedId }: { playerId: string }) => {
+            if (joinedId !== playerId) {
+                setOpponentDisconnected(false);
+            }
+        };
+
+        socket.on("player_disconnected", handleDisconnect);
+        socket.on("player_joined", handleReconnect);
+
+        return () => {
+            socket.off("player_disconnected", handleDisconnect);
+            socket.off("player_joined", handleReconnect);
+        };
+    }, [socket, playerId]);
+
+    useEffect(() => {
+        let interval: any;
+        if (opponentDisconnected) {
+            setDisconnectTimer(30);
+            interval = setInterval(() => {
+                setDisconnectTimer(prev => Math.max(0, prev - 1));
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [opponentDisconnected]);
+
+    // Prevent flash: If we just transitioned to OVER but countdown hasn't started (ref still WAITING), assume transition
+    // CRITICAL: If opponent disconnected, SKIP transition logic to show result immediately
+    const isTransitioning = isOver && prevStatusRef.current === "WAITING" && revealCountdown === 0 && !opponentDisconnected;
+    const showResult = !isTransitioning && revealCountdown === 0;
+
+    // Auto-Exit Timer
+    const [exitTimer, setExitTimer] = useState(10);
+    useEffect(() => {
+        let interval: any;
+        if (isFinished && showResult) {
+            setExitTimer(10);
+            interval = setInterval(() => {
+                setExitTimer((prev) => {
+                    if (prev <= 1) {
+                        window.location.reload();
+                        return 0;
+                    }
+                    return prev - 1;
+                });
+            }, 1000);
+        }
+        return () => clearInterval(interval);
+    }, [isFinished, showResult]);
+
+    // Reveal Countdown Effect
+
     // Reveal Countdown Effect
     useEffect(() => {
         // If we transitioned to OVER from WAITING, start reveal countdown
-        if (isOver && prevStatusRef.current === "WAITING") {
+        // SKIP if opponentDisconnected (immediate win)
+        if (isOver && prevStatusRef.current === "WAITING" && !opponentDisconnected) {
             setRevealCountdown(3);
         }
         prevStatusRef.current = gameState.status;
-    }, [gameState.status, isOver]);
+    }, [gameState.status, isOver, opponentDisconnected]);
 
     useEffect(() => {
         if (revealCountdown > 0) {
@@ -118,6 +185,10 @@ export const RPSGame: React.FC<RPSGameProps> = ({ gameState, playerId, gameId, s
         });
     }
 
+
+
+    // Determine result message
+
     // Determine result message
     let resultMessage = "";
     let resultColor = "text-white";
@@ -156,11 +227,11 @@ export const RPSGame: React.FC<RPSGameProps> = ({ gameState, playerId, gameId, s
 
             {/* ROUND TIMER */}
             {gameState.turnDeadline && !isOver && (
-                <div className="absolute top-16 right-4 z-40">
+                <div className="absolute top-16 left-4 z-40">
                     <TurnTimer
                         deadline={gameState.turnDeadline}
                         active={true}
-                        className="bg-purple-900/40 border-purple-500/30 scale-125 origin-right"
+                        className="bg-purple-900/40 border-purple-500/30 scale-125 origin-left"
                     />
                 </div>
             )}
@@ -192,11 +263,27 @@ export const RPSGame: React.FC<RPSGameProps> = ({ gameState, playerId, gameId, s
                     </div>
                 )}
 
+                {opponentDisconnected && !isFinished && (
+                    <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm animate-fade-in">
+                        <div className="bg-slate-800 p-8 rounded-2xl border border-red-500/50 shadow-2xl flex flex-col items-center gap-4">
+                            <div className="text-4xl animate-bounce">⚠️</div>
+                            <h2 className="text-xl font-bold text-white">Rival Desconectado</h2>
+                            <p className="text-slate-400 text-sm">Esperando reconexión ({disconnectTimer}s)...</p>
+                            <div className="w-full bg-slate-700 h-1 mt-2 rounded-full overflow-hidden">
+                                <div
+                                    className="h-full bg-yellow-500 transition-all duration-1000 ease-linear"
+                                    style={{ width: `${(disconnectTimer / 30) * 100}%` }}
+                                ></div>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 {/* Opponent Hand (Hidden or Revealed) */}
                 {/* Only show if we have an opponent */}
                 <div className="h-40 flex items-center justify-center">
                     {opponentId ? (
-                        (isOver && revealCountdown === 0) ? (
+                        (isOver && showResult) ? (
                             <div className="flex flex-col items-center animate-bounce-in">
                                 <div className="text-8xl">{CHOICE_EMOJIS[opponentChoice]}</div>
                                 <div className="text-white/50 text-sm mt-2 font-black">{CHOICE_LABELS[opponentChoice]}</div>
@@ -205,7 +292,7 @@ export const RPSGame: React.FC<RPSGameProps> = ({ gameState, playerId, gameId, s
                             <div className="flex flex-col items-center">
                                 {/* If reveal countdown is active, show the countdown number */}
                                 {revealCountdown > 0 ? (
-                                    <div className="text-8xl font-black text-yellow-400 animate-ping">
+                                    <div key={revealCountdown} className="text-8xl font-black text-yellow-400 animate-bounce drop-shadow-lg">
                                         {revealCountdown}
                                     </div>
                                 ) : (
@@ -232,7 +319,7 @@ export const RPSGame: React.FC<RPSGameProps> = ({ gameState, playerId, gameId, s
 
                 {/* Result Message (Only for Round Over) */}
                 <div className="h-20 flex items-center justify-center">
-                    {(isRoundOver && revealCountdown === 0) && (
+                    {(isRoundOver && showResult) && (
                         <div className={`text-4xl font-black ${resultColor} drop-shadow-glow animate-fade-in-up uppercase`}>
                             {resultMessage}
                         </div>
@@ -272,7 +359,7 @@ export const RPSGame: React.FC<RPSGameProps> = ({ gameState, playerId, gameId, s
                 </div>
 
                 {/* Actions (Rematch or Next Round) */}
-                {isRoundOver && revealCountdown === 0 && (
+                {isRoundOver && showResult && (
                     <div className="mt-4 flex flex-col items-center animate-pulse">
                         <span className="text-blue-400 font-bold text-lg mb-2">Siguiente ronda en {nextRoundCountdown}...</span>
                         <button
@@ -285,7 +372,7 @@ export const RPSGame: React.FC<RPSGameProps> = ({ gameState, playerId, gameId, s
                 )}
 
                 {/* Game Over Overlay */}
-                {isFinished && revealCountdown === 0 && (
+                {isFinished && showResult && (
                     <div className="absolute inset-0 z-50 flex items-center justify-center bg-slate-900/80 backdrop-blur-sm animate-fade-in">
                         <div className="flex flex-col items-center gap-8 p-12 bg-slate-800 rounded-3xl border-2 border-white/10 shadow-2xl transform scale-110">
                             <div className={`text-6xl md:text-7xl font-black ${resultColor} drop-shadow-glow uppercase text-center`}>
@@ -297,17 +384,28 @@ export const RPSGame: React.FC<RPSGameProps> = ({ gameState, playerId, gameId, s
                             </div>
 
                             {showRematchButton && (
-                                <button
-                                    onClick={handleRematch}
-                                    className="bg-gradient-to-r from-yellow-400 to-yellow-600 hover:from-yellow-300 hover:to-yellow-500 text-slate-900 font-black py-4 px-12 rounded-full shadow-lg hover:shadow-yellow-500/50 transform hover:scale-105 transition-all flex items-center gap-3 text-2xl animate-bounce-in"
-                                >
-                                    <span>↺</span> JUGAR DE NUEVO
-                                </button>
+                                <div className="flex flex-col gap-3 items-center w-full">
+                                    {/* Rematch Button (Optional - keeping if backend supports it, otherwise hide or change behavior) */}
+                                    {/* <button onClick={handleRematch} ...> JUGAR DE NUEVO </button> */}
+
+                                    <button
+                                        onClick={() => window.location.reload()}
+                                        className="bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-400 hover:to-blue-600 text-white font-bold py-3 px-8 rounded-full shadow-lg hover:shadow-blue-500/50 transform hover:scale-105 transition-all flex items-center gap-2 text-xl animate-bounce-in w-full justify-center"
+                                    >
+                                        🏠 VOLVER AL LOBBY
+                                    </button>
+
+                                    <div className="text-slate-500 text-xs font-mono mt-2 animate-pulse">
+                                        Volviendo automáticamente en {exitTimer}s...
+                                    </div>
+                                </div>
                             )}
                         </div>
                     </div>
                 )}
             </div>
+            {/* Chat Box */}
+            <ChatBox socket={socket} gameId={gameId} myPlayerId={playerId} />
         </div>
     );
 };

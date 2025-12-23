@@ -77,11 +77,19 @@ export const ChessGame: React.FC<ChessGameProps> = ({ gameState, playerId, gameI
 
         if (selectedSquare) {
             try {
-                const move = chess.move({
+                // Determine if promotion is needed
+                const piece = chess.get(selectedSquare as any);
+                const isPawn = piece && piece.type === 'p';
+                const isPromotionRow = (piece?.color === 'w' && square[1] === '8') || (piece?.color === 'b' && square[1] === '1');
+                const promotion = (isPawn && isPromotionRow) ? 'q' : undefined;
+
+                const moveObj: any = {
                     from: selectedSquare,
                     to: square,
-                    promotion: 'q'
-                });
+                };
+                if (promotion) moveObj.promotion = promotion;
+
+                const move = chess.move(moveObj);
 
                 if (move) {
                     setFen(chess.fen());
@@ -90,7 +98,7 @@ export const ChessGame: React.FC<ChessGameProps> = ({ gameState, playerId, gameI
 
                     socket.emit("play_move", {
                         gameId,
-                        move: { from: selectedSquare, to: square, promotion: 'q' }
+                        move: moveObj
                     });
                     return;
                 }

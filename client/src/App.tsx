@@ -4,6 +4,7 @@ import io, { Socket } from 'socket.io-client';
 // Layout & Views
 import { Layout } from './components/layout/Layout';
 import { BottomNav } from './components/layout/BottomNav';
+import { Sidebar } from './components/layout/Sidebar';
 import { GameHub } from './components/views/GameHub';
 
 // Game Components
@@ -16,7 +17,7 @@ import { SimulationPayment } from './components/SimulationPayment';
 import { AdminDashboard } from './components/views/AdminDashboard';
 
 // Connect to backend
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4001';
+const API_URL = import.meta.env.VITE_API_URL || '';
 const token = localStorage.getItem('token');
 const socket: Socket = io(API_URL, {
   auth: { token }
@@ -136,11 +137,34 @@ function App() {
     );
   }
 
+  // Get user object for Sidebar
+  const user = (() => {
+    try {
+      const u = localStorage.getItem('user');
+      return u ? JSON.parse(u) : null;
+    } catch { return null }
+  })();
+
+  const [localUser, setLocalUser] = useState(user);
+  // Listen to storage changes or events if needed to update balance in Sidebar, 
+  // but typically we'd use a context. For now relying on simple read or reload.
+
+  // Update local user when we login/logout within app flow
+  useEffect(() => {
+    // A simple hack to keep sidebar defined would be complex without Context.
+    // For now, we trust App re-renders or window re-loads on auth changes as seen in Lobby.
+  }, []);
+
   return (
-    <Layout>
-      {renderView()}
-      <BottomNav currentView={currView} onChangeView={setCurrView} />
-    </Layout>
+    <div className="bg-[--color-page-dark] min-h-screen">
+      <Sidebar currentView={currView} onChangeView={setCurrView} user={localUser} />
+      <div className="md:ml-64 transition-all duration-300">
+        <Layout>
+          {renderView()}
+          <BottomNav currentView={currView} onChangeView={setCurrView} />
+        </Layout>
+      </div>
+    </div>
   );
 }
 
