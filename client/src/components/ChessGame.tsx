@@ -1,13 +1,34 @@
 
 import React, { useState, useEffect } from "react";
 import { Socket } from "socket.io-client";
-// Use allowSyntheticDefaultImports or just import entire library to avoid named export issues
 import { Chess } from "chess.js";
 import { MatchEndModal } from "./MatchEndModal";
 import { TurnTimer } from "./TurnTimer";
+import { ChatBox } from "./ChatBox";
+
+interface ChessPlayer {
+    playerId: string;
+    username?: string;
+}
+
+interface ChessState {
+    fen: string;
+    turn: "w" | "b";
+    isCheck: boolean;
+    isCheckmate: boolean;
+    isDraw: boolean;
+    isStalemate: boolean;
+    winner?: "w" | "b" | "draw" | string;
+    history: string[];
+    status: "ACTIVE" | "FINISHED";
+    players?: ChessPlayer[];
+    turnDeadline?: number;
+    gameId?: string;
+    isGameOver?: boolean;
+}
 
 interface ChessGameProps {
-    gameState: any;
+    gameState: ChessState;
     playerId: string;
     gameId: string;
     socket: Socket;
@@ -74,11 +95,11 @@ export const ChessGame: React.FC<ChessGameProps> = ({ gameState, playerId, gameI
                     return;
                 }
             } catch (e) {
-                // Invalid move
+                // Invalid move or library error
             }
         }
 
-        const piece = chess.get(square as any); // Cast to any to avoid type issues
+        const piece = chess.get(square as any); // library types might be loose
         if (piece && piece.color === (amIWhite ? 'w' : 'b')) {
             setSelectedSquare(square);
             try {
@@ -95,7 +116,7 @@ export const ChessGame: React.FC<ChessGameProps> = ({ gameState, playerId, gameI
 
     // Safety Render
     try {
-        const board = [];
+        const board: React.ReactNode[] = [];
         const files = ['a', 'b', 'c', 'd', 'e', 'f', 'g', 'h'];
         const ranks = ['8', '7', '6', '5', '4', '3', '2', '1'];
 
@@ -214,7 +235,7 @@ export const ChessGame: React.FC<ChessGameProps> = ({ gameState, playerId, gameI
 
                 {/* Game Over Modal */}
                 {
-                    gameState.status === 'FINISHED' && (
+                    (gameState.status === 'FINISHED' || gameState.isGameOver) && (
                         <MatchEndModal
                             winnerName={gameState.winner === 'draw' ? "Empate" : (gameState.winner === (playerId === gameState.players?.[0]?.playerId ? 'w' : 'b') ? "Vos" : "Rival")}
                             isWinner={gameState.winner !== 'draw' && gameState.winner === (playerId === gameState.players?.[0]?.playerId ? 'w' : 'b')}
@@ -223,6 +244,7 @@ export const ChessGame: React.FC<ChessGameProps> = ({ gameState, playerId, gameI
                         />
                     )
                 }
+                <ChatBox socket={socket} gameId={gameId} myPlayerId={playerId} />
             </div >
         );
     } catch (e: any) {

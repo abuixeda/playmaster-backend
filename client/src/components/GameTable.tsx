@@ -7,6 +7,7 @@ import { Controls } from './Controls';
 import { MatchEndModal } from './MatchEndModal';
 import { Socket } from 'socket.io-client';
 import { TurnTimer } from './TurnTimer';
+import { ChatBox } from './ChatBox';
 
 interface GameTableProps {
     gameState: any;
@@ -393,6 +394,8 @@ export const GameTable: React.FC<GameTableProps> = ({ gameState, playerId, gameI
                     }}
                 />
             )}
+            {/* Chat Box */}
+            <ChatBox socket={socket} gameId={gameId} myPlayerId={playerId} />
         </div>
     );
 };

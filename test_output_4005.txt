@@ -1,0 +1,17 @@
+=== CHESS FLOW TEST START ===
+Creating Users...
+Creating Chess Game...
+Game Created: 1f56ee90-71f0-4321-849f-4da18eb12032
+P2 Joining...
+Connecting Sockets...
+Socket connected: XfKckLoFQANbE91GAAAB
+Socket connected: uLm7t51SXFC4UW05AAAD
+Playing Move: f2->f3 (White)
+Playing Move: e7->e5 (Black)
+Socket Move Error: { message: 'Invalid move rule' }
+Socket Move Error: { message: 'Invalid move rule' }
+Playing Move: g2->g4 (White)
+Playing Move: d8->h4 (Black)
+Socket Move Error: { message: 'Invalid move rule' }
+Socket Move Error: { message: 'Invalid move rule' }
+FAILURE: Game did not finish. null

@@ -11,38 +11,75 @@ export class ChessLogic {
     static validateMove(stateJSON: ChessState, move: ChessMove): string | null {
         try {
             const chess = this.recoverGame(stateJSON);
+            let result = null;
 
             try {
-                const result = chess.move({
+                // 1. Try exact move
+                result = chess.move({
                     from: move.from,
                     to: move.to,
-                    promotion: move.promotion || 'q'
+                    promotion: move.promotion
                 });
-                if (!result) return "Invalid move";
             } catch (e) {
-                return "Invalid move rule";
+                // 2. Fallback: If failed and promotion was provided, try without it
+                if (move.promotion) {
+                    try {
+                        result = chess.move({
+                            from: move.from,
+                            to: move.to
+                        });
+                    } catch (e2) {
+                        // Still failed
+                        result = null;
+                    }
+                }
             }
 
+            if (!result) return "Invalid move";
             return null;
+
         } catch (e) {
-            return "Invalid board state";
+            console.error("ChessLogic Validate Exception:", e);
+            console.error("ChessLogic State passed:", JSON.stringify(stateJSON));
+            return "Invalid move rule";
         }
     }
 
     static applyMove(stateJSON: ChessState, move: ChessMove): ChessState {
         const chess = this.recoverGame(stateJSON);
+        let moveResult = null;
 
         try {
-            chess.move({
+            moveResult = chess.move({
                 from: move.from,
                 to: move.to,
-                promotion: move.promotion || 'q'
+                promotion: move.promotion
             });
         } catch (e) {
+            // Fallback: Retrying without promotion if it failed
+            if (move.promotion) {
+                try {
+                    moveResult = chess.move({
+                        from: move.from,
+                        to: move.to
+                    });
+                } catch (e2) {
+                    console.error("ChessLogic ApplyMove Fallback Error:", e2);
+                }
+            } else {
+                console.error("ChessLogic ApplyMove Error:", e);
+            }
+        }
+
+        if (!moveResult) {
+            console.error("ChessLogic: Failed to apply move even with fallback", move);
             return stateJSON;
         }
 
-        return this.mapState(chess);
+        const newState = this.mapState(chess);
+        console.log("ChessLogic Applied Move:", JSON.stringify(move));
+        console.log("New FEN:", newState.fen);
+        return newState;
     }
 
     private static recoverGame(state: ChessState): Chess {
@@ -54,12 +91,9 @@ export class ChessLogic {
                 for (const moveSan of state.history) {
                     chess.move(moveSan);
                 }
-                // Verify FEN matches? 
-                // if (chess.fen() !== state.fen) console.warn("FEN Mismatch after replay");
                 return chess;
             } catch (e) {
                 // If replay fails, fallback to FEN (lost history but playable)
-                // console.error("History replay failed, falling back to FEN", e);
             }
         }
 

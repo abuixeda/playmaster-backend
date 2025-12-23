@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import Matter from 'matter-js';
 import { Socket } from 'socket.io-client';
+import { ChatBox } from './ChatBox';
 
 interface PoolGameProps {
     gameState: any;
@@ -433,6 +434,7 @@ export const PoolGame: React.FC<PoolGameProps> = ({ gameState, playerId, gameId,
                     </div>
                 </div>
             )}
-        </div>
+            <ChatBox socket={socket} gameId={gameId} myPlayerId={playerId} />
+        </div >
     );
 };

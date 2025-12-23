@@ -860,7 +860,7 @@ export class TrucoLogic {
         const nextStartIdx = (nextDealerIdx + 1) % state.players.length;
         state.turn = state.players[nextStartIdx].playerId;
     }
-    private static calculateEnvidoPoints(cards: Card[]): number {
+    public static calculateEnvidoPoints(cards: Card[]): number {
         // Group by suit
         const bySuit: Record<string, number[]> = {};
         let maxSingle = 0;
@@ -893,12 +893,12 @@ export class TrucoLogic {
     }
 
 
-    private static hasFlor(cards: Card[]): boolean {
+    public static hasFlor(cards: Card[]): boolean {
         if (cards.length < 3) return false;
         return cards[0].suit === cards[1].suit && cards[1].suit === cards[2].suit;
     }
 
-    private static calculateFlorPoints(cards: Card[]): number {
+    public static calculateFlorPoints(cards: Card[]): number {
         // Assume hasFlor is checked.
         // Sum values + 20.
         // 10,11,12 are 0.

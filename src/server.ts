@@ -1,14 +1,17 @@
 import Fastify from "fastify";
+import { serializerCompiler, validatorCompiler } from "fastify-type-provider-zod";
 import authRoutes from "./routes/auth";
 import gamesRoutes from "./routes/games";
 import walletRoutes from "./routes/wallet";
 import webhookRoutes from "./routes/webhooks";
 import userRoutes from "./routes/user";
-import { adminRoutes } from "./routes/admin"; // Added import for admin routes
+import { adminRoutes } from "./routes/admin";
 
 import rankingRoutes from "./routes/ranking";
 import { SocketServer } from "./services/socket/SocketServer";
 import cors from "@fastify/cors";
+import helmet from "@fastify/helmet";
+import rateLimit from "@fastify/rate-limit";
 import { verifyToken } from "./lib/jwt";
 
 
@@ -18,10 +21,27 @@ export async function start() {
   console.log("[DEBUG] start() called");
   const app = Fastify();
 
-  // Configure CORS for Fastify (MUST BE FIRST)
+  // Zod Configuration
+  app.setValidatorCompiler(validatorCompiler);
+  app.setSerializerCompiler(serializerCompiler);
+
+  // 1. Security Headers (Helmet)
+  await app.register(helmet, {
+    global: true
+  });
+
+  // 2. Rate Limiting
+  await app.register(rateLimit, {
+    max: 100, // Max 100 requests
+    timeWindow: '1 minute',
+    allowList: ['127.0.0.1'] // Allow local testing
+  });
+
+  // 3. CORS
+  const corsOrigin = process.env.CORS_ORIGIN || "*";
   await app.register(cors, {
-    origin: "*",
-    methods: ["GET", "POST", "PUT", "DELETE"]
+    origin: corsOrigin,
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"]
   });
 
   // Health Check

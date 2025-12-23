@@ -1,0 +1,120 @@
+60: 34 static async joinGame(gameId: string, userId: string): Promise<GamePlayer> {
+61: 35     // Enforce max players logic here if needed, or in service
+62: ΓåÆ 36     return prisma.gamePlayer.create(
+63: Unique constraint failed on the fields: (`gameId`,`userId`)
+64: [Socket] handleMove called: 1f56ee90-71f0-4321-849f-4da18eb12032. Session exists? true
+65: [Socket] handleMove GameType: CHESS
+66: [Socket] handleMove called: 1f56ee90-71f0-4321-849f-4da18eb12032. Session exists? true
+67: [Socket] handleMove GameType: CHESS
+68: [Socket] handleMove called: 1f56ee90-71f0-4321-849f-4da18eb12032. Session exists? true
+69: [Socket] handleMove GameType: CHESS
+70: node.exe :
+71: ChessLogic Validate
+72: Exception: Error:
+73: Invalid move: {"from"
+74: :"e7","to":"e5","prom
+75: otion":"q"}
+76: En línea: 1
+77: Carácter: 1
+78: + & "C:\Program Files
+79: \nodejs/node.exe"
+80: "C:\Program
+81: Files\nodejs/node_mo
+82: ...
+83: + ~~~~~~~~~~~~~~~~~~~
+84: ~~~~~~~~~~~~~~~~~~~~~
+85: ~~~~~~~~~~~~~~~~~~~~~
+86: ~~~~~~~~
+87: + CategoryInfo
+88: : NotSpe
+89: cified: (ChessLo
+90: gic Vali...promo
+91: tion":"q"}:Strin
+92: g) [], RemoteExc
+93: eption
+94: + FullyQualified
+95: ErrorId : Native
+96: CommandError
+97: 
+98: at Chess.move (C:
+99: \playmaster-backend\n
+100: ode_modules\src\chess
+101: .ts:1699:15)
+102: at Function.valid
+103: ateMove (C:\playmaste
+104: r-backend\src\service
+105: s\chess\ChessLogic.ts
+106: :16:38)
+107: at SocketServer.h
+108: andleMove (C:\playmas
+109: ter-backend\src\servi
+110: ces\socket\SocketServ
+111: er.ts:523:36)
+112: at
+113: Socket.<anonymous> (C
+114: :\playmaster-backend\
+115: src\services\socket\S
+116: ocketServer.ts:262:18
+117: )
+118: at Socket.emit
+119: (node:events:519:28)
+120: at
+121: Socket.emitUntyped (C
+122: :\playmaster-backend\
+123: node_modules\socket.i
+124: o\dist\typed-events.j
+125: s:69:22)
+126: at C:\playmaster-
+127: backend\node_modules\
+128: socket.io\dist\socket
+129: .js:697:39
+130: at process.proces
+131: sTicksAndRejections (
+132: node:internal/process
+133: /task_queues:85:11)
+134: ChessLogic State
+135: passed: {"fen":"rnbqk
+136: bnr/pppppppp/8/8/8/8/
+137: PPPPPPPP/RNBQKBNR w
+138: KQkq - 0 1","turn":"w
+139: ","isCheck":false,"is
+140: Checkmate":false,"isD
+141: raw":false,"isStalema
+142: te":false,"history":[
+143: ],"status":"ACTIVE"}
+144: ChessLogic Validate
+145: Error for move: {"fro
+146: m":"e7","to":"e5","pl
+147: ayerId":"38bf27c6-bf2
+148: e-4280-b953-8cbf74556
+149: 8a7"}
+150: State FEN was: rnbqkb
+151: nr/pppppppp/8/8/8/8/P
+152: PPPPPPP/RNBQKBNR w
+153: KQkq - 0 1
+154: Recovered FEN was: rn
+155: bqkbnr/pppppppp/8/8/8
+156: /8/PPPPPPPP/RNBQKBNR
+157: w KQkq - 0 1
+158: [Socket] handleMove called: 1f56ee90-71f0-4321-849f-4da18eb12032. Session exists? true
+159: [Socket] handleMove GameType: CHESS
+160: ChessLogic Validate
+161: Exception: Error:
+162: Invalid move: {"from"
+163: :"e7","to":"e5","prom
+164: otion":"q"}
+165: at Chess.move (C:
+166: \playmaster-backend\n
+167: ode_modules\src\chess
+168: .ts:1699:15)
+169: at Function.valid
+170: ateMove (C:\playmaste
+171: r-backend\src\service
+172: s\chess\ChessLogic.ts
+173: :16:38)
+174: at SocketServer.h
+175: andleMove (C:\playmas
+176: ter-backend\src\servi
+177: ces\socket\SocketServ
+178: er.ts:523:36)
+179: at

@@ -249,7 +249,12 @@ export class SocketServer {
             // Or allow client to say who they are?
             // SECURITY: If authenticated, playerId MUST match auth ID.
             const effectivePlayerId = isAuthenticated ? userId : playerId;
-            this.handleJoinGame(socket, gameId, effectivePlayerId, gameType);
+            try {
+                this.handleJoinGame(socket, gameId, effectivePlayerId, gameType);
+            } catch (e: any) {
+                console.error("HandleJoinGame Error:", e);
+                socket.emit("error", { message: "Join Failed: " + e.message });
+            }
         });
 
         socket.on("play_move", ({ gameId, move }) => {
@@ -273,9 +278,52 @@ export class SocketServer {
             Matchmaker.removeFromQueue(userId); // Ensure removed from queue
             this.handleDisconnect(socket);
         });
+
+        // --- CHAT EVENTS ---
+        socket.on("chat:send", ({ gameId, message }) => {
+            // Basic Validation
+            if (!gameId || !message || typeof message !== 'string') return;
+
+            const cleanMessage = message.trim().slice(0, 200); // Check length
+            if (cleanMessage.length === 0) return;
+
+            const session = this.sessions[gameId];
+            if (!session) return;
+
+            const playerId = session.players[socket.id];
+            if (!playerId) return;
+
+            // Optional: Get Username (if available in session or user map)
+            // For now, send playerId or "User"
+            // We can try to look up username from session state if we injected it
+            let username = "Jugador";
+            const pState = (session.state as any).players;
+            if (Array.isArray(pState)) {
+                // Truco/Chess/Pool/RPS usually have players array or object
+                const pObj = pState.find((p: any) => p.playerId === playerId) ||
+                    (session.state as any).players[playerId]; // RPS style
+                if (pObj && pObj.username) username = pObj.username;
+            } else if ((session.state as any).players && (session.state as any).players[playerId]) {
+                // RPS Dictionary style
+                if ((session.state as any).players[playerId].username) {
+                    username = (session.state as any).players[playerId].username;
+                }
+            }
+
+            console.log(`[Chat] ${gameId} - ${username}: ${cleanMessage}`);
+
+            // Broadcast to Room
+            this.io.to(gameId).emit("chat:receive", {
+                playerId,
+                username,
+                message: cleanMessage,
+                timestamp: Date.now()
+            });
+        });
     }
 
     private async handleJoinGame(socket: Socket, gameId: string, playerId: string, gameType: string = "TRUCO") {
+        console.log(`[Socket] handleJoinGame called for ${gameId}, player ${playerId}, type ${gameType}`);
         let session = this.sessions[gameId];
 
         // 1. Try to load from DB if not in memory (Recovery)
@@ -488,7 +536,10 @@ export class SocketServer {
 
     private handleMove(socket: Socket, gameId: string, move: any) {
         const session = this.sessions[gameId];
+        console.log(`[Socket] handleMove called: ${gameId}. Session exists? ${!!session}`);
         if (!session) return;
+        const gameType = (session as any).gameType || "TRUCO";
+        console.log(`[Socket] handleMove GameType: ${gameType}`);
 
         const playerId = session.players[socket.id];
         if (!playerId) return;
@@ -507,7 +558,6 @@ export class SocketServer {
             return;
         }
 
-        const gameType = (session as any).gameType || "TRUCO";
         let moveApplied = false;
 
         if (gameType === "CHESS") {

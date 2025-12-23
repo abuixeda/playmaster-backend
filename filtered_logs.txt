@@ -1,0 +1,38 @@
+16: [Socket] New connection attempt: 55FYnizbBq3SaculAAAB
+17: [Socket] Token received: YES (Length: 187)
+18: [Socket] Auth Success! User ID: c0074264-7149-4486-a909-197464bdf453
+19: [Socket] Final Identity: c0074264-7149-4486-a909-197464bdf453 (Authenticated: true)
+20: [Socket] New connection attempt: 5Tyhez4RrTQuuK8tAAAD
+21: [Socket] Token received: YES (Length: 187)
+22: [Socket] Auth Success! User ID: 95bbced4-d316-46ef-935c-b68edc59f9a1
+23: [Socket] Final Identity: 95bbced4-d316-46ef-935c-b68edc59f9a1 (Authenticated: true)
+24: [Socket] handleJoinGame called for 9ba7f9b7-7538-4c20-aa1f-322e3a974adf, player c0074264-7149-4486-a909-197464bdf453, type CHESS
+25: [Socket] handleJoinGame called for 9ba7f9b7-7538-4c20-aa1f-322e3a974adf, player 95bbced4-d316-46ef-935c-b68edc59f9a1, type CHESS
+64: [Socket] handleMove called: 9ba7f9b7-7538-4c20-aa1f-322e3a974adf. Session exists? true
+65: [Socket] handleMove GameType: CHESS
+66: [Socket] handleMove called: 9ba7f9b7-7538-4c20-aa1f-322e3a974adf. Session exists? true
+67: [Socket] handleMove GameType: CHESS
+68: [Socket] handleMove called: 9ba7f9b7-7538-4c20-aa1f-322e3a974adf. Session exists? true
+69: [Socket] handleMove GameType: CHESS
+71: ChessLogic Validate
+99: State FEN was: rnbqkb
+103: Recovered FEN was: rn
+107: [Socket] handleMove called: 9ba7f9b7-7538-4c20-aa1f-322e3a974adf. Session exists? true
+108: [Socket] handleMove GameType: CHESS
+109: ChessLogic Validate
+115: State FEN was: rnbqkb
+119: Recovered FEN was: rn
+123: [Socket] handleMove called: 9ba7f9b7-7538-4c20-aa1f-322e3a974adf. Session exists? true
+124: [Socket] handleMove GameType: CHESS
+125: [Socket] handleMove called: 9ba7f9b7-7538-4c20-aa1f-322e3a974adf. Session exists? true
+126: [Socket] handleMove GameType: CHESS
+127: [Socket] handleMove called: 9ba7f9b7-7538-4c20-aa1f-322e3a974adf. Session exists? true
+128: [Socket] handleMove GameType: CHESS
+129: ChessLogic Validate
+135: State FEN was: rnbqkb
+139: Recovered FEN was: rn
+143: [Socket] handleMove called: 9ba7f9b7-7538-4c20-aa1f-322e3a974adf. Session exists? true
+144: [Socket] handleMove GameType: CHESS
+145: ChessLogic Validate
+151: State FEN was: rnbqkb
+155: Recovered FEN was: rn

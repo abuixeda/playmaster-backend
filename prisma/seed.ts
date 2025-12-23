@@ -22,7 +22,15 @@ async function main() {
       isActive: true,
       version: 1,
     },
-    // agregá más si querés (UNO, AJEDREZ, etc.)
+    {
+      code: 'CHESS',
+      name: 'Ajedrez',
+      minPlayers: 2,
+      maxPlayers: 2,
+      rules: { variant: 'standard' },
+      isActive: true, // Habilitado
+      version: 1,
+    }
   ];
 
   for (const d of defs) {
