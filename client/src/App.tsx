@@ -145,7 +145,7 @@ function App() {
     } catch { return null }
   })();
 
-  const [localUser, setLocalUser] = useState(user);
+  const [localUser] = useState(user);
   // Listen to storage changes or events if needed to update balance in Sidebar, 
   // but typically we'd use a context. For now relying on simple read or reload.
 

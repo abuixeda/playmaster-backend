@@ -1,6 +1,6 @@
 
 import { Home, Search, PlusCircle, MessageCircle, User, LogOut } from 'lucide-react';
-import React from 'react';
+
 
 interface SidebarProps {
     currentView: string;
@@ -44,8 +44,8 @@ export function Sidebar({ currentView, onChangeView, user }: SidebarProps) {
                             key={item.id}
                             onClick={() => onChangeView(item.id)}
                             className={`w-full flex items-center gap-4 px-4 py-3 rounded-xl transition-all duration-200 group ${isActive
-                                    ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30 shadow-lg shadow-blue-900/20'
-                                    : 'text-slate-400 hover:bg-white/5 hover:text-white'
+                                ? 'bg-blue-600/20 text-blue-400 border border-blue-500/30 shadow-lg shadow-blue-900/20'
+                                : 'text-slate-400 hover:bg-white/5 hover:text-white'
                                 }`}
                         >
                             <Icon size={20} className={isActive ? 'text-blue-400' : 'text-slate-500 group-hover:text-white'} />
