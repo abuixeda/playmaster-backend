@@ -36,7 +36,8 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
             const token = localStorage.getItem('token');
             if (!token) return;
             try {
-                const res = await fetch('/api/wallet/me', { headers: { Authorization: `Bearer ${token}` } });
+                const API_URL = import.meta.env.VITE_API_URL || '';
+                const res = await fetch(`${API_URL}/api/wallet/me`, { headers: { Authorization: `Bearer ${token}` } });
                 const data = await res.json();
                 if (data.balance !== undefined) setBalance(data.balance);
             } catch (e) { console.error("Wallet fetch error", e); }
@@ -55,7 +56,9 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
         if (!authEmail || !authPass) return alert("Completa los campos");
         if (authMode === 'REGISTER' && !authName) return alert("Ingresa un nombre de usuario");
 
-        const endpoint = authMode === 'LOGIN' ? '/api/auth/login' : '/api/auth/register';
+        // Use Vite Env Var or fallback
+        const API_URL = import.meta.env.VITE_API_URL || '';
+        const endpoint = authMode === 'LOGIN' ? `${API_URL}/api/auth/login` : `${API_URL}/api/auth/register`;
         const body = authMode === 'LOGIN'
             ? { emailOrUsername: authEmail, password: authPass }
             : { email: authEmail, username: authName, password: authPass };
