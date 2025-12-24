@@ -1,6 +1,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { StoreModal } from './StoreModal';
+import { API_URL } from '../config';
 
 import { Socket } from 'socket.io-client';
 
@@ -40,10 +41,18 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoin, onOpenProfile, socket }) =
             ? { emailOrUsername: authEmail, password: authPass }
             : { email: authEmail, username: playerName, password: authPass };
 
-        const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:4001';
+        // Importado arriba, pero por si acaso lo aseguramos aquí o usamos el global si ya importaste config
+        // Mejor usar la importación. Voy a asumir que añadiré el import en otro paso o lo hago todo aquí si es posible.
+        // Como replace_file_content es para un bloque, ajustaré esto para que use la variable importada.
+        // Pero primero debo añadir el import. 
+        // Espera, no puedo añadir el import en este bloque porque está muy lejos.
+        // Usaré multi_replace para hacerlo bien en un solo paso si fuera necesario, pero aquí dividiré.
+        // Este paso solo cambia el uso. Asumiré que haré otro paso para el import.
+
+        console.log(`[Auth] Intentando ${authMode} en: ${API_URL}${endpoint}`);
 
         try {
-            const res = await fetch(API_URL + endpoint, {
+            const res = await fetch(`${API_URL}${endpoint}`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(body)
@@ -58,8 +67,9 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoin, onOpenProfile, socket }) =
                 window.location.reload();
                 alert(data.error || "Error");
             }
-        } catch (_e) {
-            alert("Error de conexión");
+        } catch (error) {
+            console.error("[Auth Error]", error);
+            alert("Error de conexión con el servidor. Revisa la consola (F12) para más detalles.");
         }
     };
 
