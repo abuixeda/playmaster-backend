@@ -45,4 +45,28 @@ export default async function authRoutes(app: FastifyInstance) {
       return meCtrl(req, reply);
     }
   );
+
+  server.get("/api/debug-db", async (req, reply) => {
+    try {
+      // Test DB connection
+      const userCount = await require("../lib/prisma").prisma.user.count();
+      return reply.send({
+        status: "ok",
+        message: "DB Connected",
+        userCount,
+        env: {
+          DATABASE_URL: !!process.env.DATABASE_URL,
+          JWT_SECRET: !!process.env.JWT_SECRET,
+          NODE_ENV: process.env.NODE_ENV
+        }
+      });
+    } catch (error: any) {
+      return reply.status(500).send({
+        status: "error",
+        message: "DB Connection Failed",
+        error: error.message,
+        stack: error.stack
+      });
+    }
+  });
 }

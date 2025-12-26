@@ -73,11 +73,14 @@ export async function loginCtrl(
       },
     });
   } catch (error: any) {
-    console.error("[AUTH LOGIN ERROR]", error); // Esto saldrá en los logs de Railway
-    // Devolvemos el detalle del error para que lo veas en el navegador (solo para debug)
+    console.error("[AUTH LOGIN ERROR] Full details:", error);
+    if (error.stack) console.error(error.stack);
+
     return reply.status(500).send({
       error: "Error interno al iniciar sesión",
-      details: error.message
+      message: error.message,
+      stack: process.env.NODE_ENV === 'development' ? error.stack : undefined,
+      details: JSON.stringify(error, Object.getOwnPropertyNames(error))
     });
   }
 }
