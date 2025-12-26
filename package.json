@@ -12,8 +12,7 @@
     "prisma:studio": "prisma studio",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "tsx scripts/test_complete_flow.ts",
-    "postinstall": "prisma generate"
+    "test:e2e": "tsx scripts/test_complete_flow.ts"
   },
   "keywords": [],
   "author": "",

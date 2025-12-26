@@ -1,5 +1,5 @@
 # Build Stage
-FROM node:18-alpine AS builder
+FROM node:22-alpine AS builder
 
 WORKDIR /app
 
@@ -20,7 +20,7 @@ COPY . .
 RUN npm run build
 
 # Production Stage
-FROM node:18-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 
@@ -34,8 +34,8 @@ RUN npm install --only=production
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
 
-# Generate Prisma Client for production
-RUN npm run prisma:generate
+# Copy generated Prisma Client from builder (avoid regenerating in prod/no-cli env)
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 
 # Expose port
 EXPOSE 3000
