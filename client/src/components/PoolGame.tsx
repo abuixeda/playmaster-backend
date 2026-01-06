@@ -22,6 +22,7 @@ export const PoolGame: React.FC<PoolGameProps> = ({ gameState, playerId, gameId,
     const [cueData, setCueData] = useState<{ start: { x: number, y: number }, current: { x: number, y: number } } | null>(null);
     const [mousePos, setMousePos] = useState<{ x: number, y: number } | null>(null);
     const [winner, setWinner] = useState<string | null>(null);
+    const [showExitConfirm, setShowExitConfirm] = useState(false);
 
     // Dimensions
     const WIDTH = 800;
@@ -361,9 +362,16 @@ export const PoolGame: React.FC<PoolGameProps> = ({ gameState, playerId, gameId,
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-4">
             {/* Header matches other games */}
-            <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-center text-sm text-slate-500 font-mono">
-                <div>SALA: {gameId}</div>
-                <div>JUGADOR: {playerId.slice(0, 6)}...</div>
+            <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-center text-sm text-slate-500 font-mono z-50">
+                <button
+                    onClick={() => setShowExitConfirm(true)}
+                    className="bg-slate-800 hover:bg-slate-700 text-slate-300 text-xs font-bold px-4 py-2 rounded-full border border-slate-600 transition-all"
+                >
+                    SALIR
+                </button>
+                <div className="flex gap-4">
+                    <div>SALA: {gameId}</div>
+                </div>
             </div>
 
             <h1 className="text-4xl md:text-5xl font-black mb-8 tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-emerald-500 to-teal-500 drop-shadow-lg">
@@ -443,6 +451,36 @@ export const PoolGame: React.FC<PoolGameProps> = ({ gameState, playerId, gameId,
                 </div>
             )}
             <ChatBox socket={socket} gameId={gameId} myPlayerId={playerId} />
+
+            {/* Exit Confirmation Modal */}
+            {showExitConfirm && (
+                <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                    <div className="bg-slate-800 border-2 border-slate-700 p-8 rounded-xl shadow-2xl max-w-sm text-center transform scale-100 animate-in fade-in zoom-in duration-200">
+                        <div className="text-4xl mb-4">🎱</div>
+                        <h3 className="text-2xl font-bold text-white mb-2">¿Dejar la Mesa?</h3>
+                        <p className="text-slate-400 mb-8 text-sm leading-relaxed">
+                            Si te vas ahora, perderás la partida.
+                        </p>
+                        <div className="flex gap-4 justify-center">
+                            <button
+                                onClick={() => setShowExitConfirm(false)}
+                                className="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold transition-all"
+                            >
+                                Seguir
+                            </button>
+                            <button
+                                onClick={() => {
+                                    socket.emit('leave_game', { gameId });
+                                    window.location.href = '/';
+                                }}
+                                className="px-6 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg shadow-lg font-bold transition-all hover:scale-105"
+                            >
+                                Salir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div >
     );
 };

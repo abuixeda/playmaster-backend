@@ -53,6 +53,7 @@ export const ChessGame: React.FC<ChessGameProps> = ({ gameState, playerId, gameI
     const [, setFen] = useState(gameState.fen);
     const [selectedSquare, setSelectedSquare] = useState<string | null>(null);
     const [validMoves, setValidMoves] = useState<string[]>([]);
+    const [showExitConfirm, setShowExitConfirm] = useState(false);
 
     useEffect(() => {
         if (gameState.fen && gameState.fen !== chess.fen()) {
@@ -144,13 +145,17 @@ export const ChessGame: React.FC<ChessGameProps> = ({ gameState, playerId, gameI
                 const piece = chess.get(square as any);
                 const pieceSymbol = piece ? PIECE_UNICODE[piece.color === 'w' ? piece.type.toUpperCase() : piece.type] : null;
 
+                // Highlight King in Red if in Check
+                const isKing = piece && piece.type === 'k';
+                const isCheckHighlight = isKing && gameState.isCheck && piece.color === gameState.turn;
+
                 board.push(
                     <div
                         key={square}
                         onClick={() => handleSquareClick(square)}
                         className={`
                             w-full h-full flex items-center justify-center text-4xl select-none cursor-pointer
-                            ${isDark ? 'bg-[#8b4513]' : 'bg-[#eecfa1]'}
+                            ${isCheckHighlight ? 'bg-red-600! animate-pulse' : (isDark ? 'bg-[#8b4513]' : 'bg-[#eecfa1]')}
                             ${isSelected ? 'bg-yellow-400!' : ''}
                             ${isValidMove ? 'ring-4 ring-black/20 inset-0' : ''}
                         `}
@@ -171,7 +176,18 @@ export const ChessGame: React.FC<ChessGameProps> = ({ gameState, playerId, gameI
         }
 
         return (
+
             <div className="flex flex-col md:flex-row items-center justify-center min-h-screen bg-stone-900 text-white p-4 gap-8 notranslate" translate="no">
+
+                {/* Exit Button */}
+                <div className="absolute top-4 left-4 z-50">
+                    <button
+                        onClick={() => setShowExitConfirm(true)}
+                        className="bg-red-900/80 hover:bg-red-800 text-white text-xs font-bold px-4 py-2 rounded-full border border-red-500/50 shadow-lg backdrop-blur flex items-center gap-2"
+                    >
+                        <span>🏃</span> ABANDONAR
+                    </button>
+                </div>
 
                 {/* Board Section */}
                 <div className="flex flex-col items-center gap-4">
@@ -194,11 +210,87 @@ export const ChessGame: React.FC<ChessGameProps> = ({ gameState, playerId, gameI
                         )}
                     </div>
 
+                    {/* Captured Pieces By Opponent (My Lost Pieces) - Top */}
+                    <div className="w-full max-w-[500px] flex flex-wrap justify-center gap-1 min-h-[2rem] px-2 bg-black/20 rounded-lg">
+                        {(() => {
+                            const boardFlat = chess.board().flat();
+                            const captured: string[] = [];
+                            const startCounts: Record<string, number> = { 'p': 8, 'n': 2, 'b': 2, 'r': 2, 'q': 1 };
+
+                            // Count current MY pieces (if I am White -> count 'w', else 'b')
+                            // Wait, standard UI:
+                            // If I am White:
+                            //    Top (Black Player area) shows White pieces they captured (My Lost)
+                            //    Bottom (My area) shows Black pieces I captured (Their Lost)
+
+                            const opponentColor = amIWhite ? 'b' : 'w';
+                            const myColor = amIWhite ? 'w' : 'b';
+
+                            // Calculate MY LOST PIECES (Captured by Opponent)
+                            // Iterate startCounts, subtract current counts on board of MY color
+                            const myCurrentCounts: Record<string, number> = {};
+                            boardFlat.forEach(p => {
+                                if (p && p.color === myColor) {
+                                    myCurrentCounts[p.type] = (myCurrentCounts[p.type] || 0) + 1;
+                                }
+                            });
+
+                            ['q', 'r', 'b', 'n', 'p'].forEach(type => { // Order by value
+                                const count = (startCounts[type] || 0) - (myCurrentCounts[type] || 0);
+                                for (let k = 0; k < count; k++) captured.push(type);
+                            });
+
+                            return captured.map((type, idx) => (
+                                <span key={idx} className="text-xl text-stone-400 opacity-80"
+                                    style={{ textShadow: amIWhite ? '0 0 2px black' : 'none' }}>
+                                    {PIECE_UNICODE[amIWhite ? type.toUpperCase() : type]}
+                                    {/* If I am White (my pieces are white), show White symbols. If Black, show Black symbols. */}
+                                </span>
+                            ));
+                        })()}
+                    </div>
+
                     <div className="relative group">
                         <div className="absolute -inset-1 bg-gradient-to-r from-amber-600 to-amber-900 rounded-lg blur opacity-25 group-hover:opacity-50 transition duration-1000"></div>
                         <div className="relative w-[85vw] max-w-[500px] aspect-square grid grid-cols-8 grid-rows-8 border-[12px] border-stone-800 rounded-sm shadow-2xl bg-stone-800">
                             {board}
                         </div>
+                    </div>
+
+                    {/* Captured Pieces By Me (Opponent Lost Pieces) - Bottom */}
+                    <div className="w-full max-w-[500px] flex flex-wrap justify-center gap-1 min-h-[2rem] px-2 bg-black/20 rounded-lg">
+                        {(() => {
+                            const boardFlat = chess.board().flat();
+                            const captured: string[] = [];
+                            const startCounts: Record<string, number> = { 'p': 8, 'n': 2, 'b': 2, 'r': 2, 'q': 1 };
+
+                            const opponentColor = amIWhite ? 'b' : 'w';
+
+                            // Calculate OPPONENT LOST PIECES (Captured by Me)
+                            const oppCurrentCounts: Record<string, number> = {};
+                            boardFlat.forEach(p => {
+                                if (p && p.color === opponentColor) {
+                                    oppCurrentCounts[p.type] = (oppCurrentCounts[p.type] || 0) + 1;
+                                }
+                            });
+
+                            ['q', 'r', 'b', 'n', 'p'].forEach(type => {
+                                const count = (startCounts[type] || 0) - (oppCurrentCounts[type] || 0);
+                                for (let k = 0; k < count; k++) captured.push(type);
+                            });
+
+                            return captured.map((type, idx) => (
+                                <span key={idx} className="text-xl text-stone-400 opacity-80"
+                                    style={{ textShadow: !amIWhite ? '0 0 2px black' : 'none' }}>
+                                    {PIECE_UNICODE[amIWhite ? type : type.toUpperCase()]}
+                                    {/* If I am White, I captured Black pieces (lowercase keys in PIECE_UNICODE usually maps to Black symbols? No.)
+                                         PIECE_UNICODE: 'p' -> Black Pawn, 'P' -> White Pawn. 
+                                         If I captured Black 'p', I want to show Black Pawn symbol 'p'.
+                                         If amIWhite=true -> Opponent is Black ('p'). Show 'p'.
+                                     */}
+                                </span>
+                            ));
+                        })()}
                     </div>
                 </div>
 
@@ -253,6 +345,36 @@ export const ChessGame: React.FC<ChessGameProps> = ({ gameState, playerId, gameI
                     )
                 }
                 <ChatBox socket={socket} gameId={gameId} myPlayerId={playerId} />
+
+                {/* Exit Confirmation Modal */}
+                {showExitConfirm && (
+                    <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                        <div className="bg-stone-800 border-2 border-stone-600 p-8 rounded-xl shadow-2xl max-w-sm text-center transform scale-100 animate-in fade-in zoom-in duration-200">
+                            <div className="text-4xl mb-4">🏳️</div>
+                            <h3 className="text-2xl font-bold text-amber-500 mb-2 font-serif">¿Rendirse?</h3>
+                            <p className="text-stone-300 mb-8 text-sm leading-relaxed">
+                                Abandonar la partida contará como una derrota.
+                            </p>
+                            <div className="flex gap-4 justify-center">
+                                <button
+                                    onClick={() => setShowExitConfirm(false)}
+                                    className="px-6 py-2.5 bg-stone-700 hover:bg-stone-600 text-white rounded-lg font-bold transition-all"
+                                >
+                                    Seguir Jugando
+                                </button>
+                                <button
+                                    onClick={() => {
+                                        socket.emit('leave_game', { gameId });
+                                        window.location.href = '/';
+                                    }}
+                                    className="px-6 py-2.5 bg-red-800 hover:bg-red-700 text-white rounded-lg shadow-lg font-bold transition-all hover:scale-105 border border-red-500/30"
+                                >
+                                    Rendirse
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                )}
             </div >
         );
     } catch (e: any) {

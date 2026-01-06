@@ -1,7 +1,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
-import { Card } from './Card';
-import type { Suit } from './Card';
+import { TrucoCard } from './TrucoCard'; // Renamed import
+import type { Suit } from './TrucoCard'; // Import Suit type from TrucoCard
 import { Hand } from './Hand';
 import { Controls } from './Controls';
 import { MatchEndModal } from './MatchEndModal';
@@ -36,12 +36,24 @@ export const GameTable: React.FC<GameTableProps> = ({ gameState, playerId, gameI
     // Add local state for banner visibility
     const [showEnvidoResult, setShowEnvidoResult] = useState(false);
     const lastEnvidoRef = useRef<string | null>(null);
+    const [showExitConfirm, setShowExitConfirm] = useState(false);
+    const isProcessingRef = useRef(false); // Use Ref for synchronous locking
 
     // Initial setup effects
     useEffect(() => {
-        socket.on("game_state", (_state: any) => { // Changed TrucoState to any as it's not defined here
-            // ... handled by parent mainly, but if we need local effects
-        });
+        const onGameState = () => { isProcessingRef.current = false; };
+        const onMoveError = (err: any) => {
+            console.error("Move Error:", err);
+            isProcessingRef.current = false;
+        };
+
+        socket.on("game_state", onGameState);
+        socket.on("move_error", onMoveError);
+
+        return () => {
+            socket.off("game_state", onGameState);
+            socket.off("move_error", onMoveError);
+        };
     }, [socket]);
 
     useEffect(() => {
@@ -61,6 +73,14 @@ export const GameTable: React.FC<GameTableProps> = ({ gameState, playerId, gameI
             setShowEnvidoResult(false);
         }
     }, [gameState.lastEnvidoResult]);
+
+    // Force Cleanup on Unmount (or Game Leave)
+    useEffect(() => {
+        return () => {
+            console.log("GameTable Unmounting - Cleaning up");
+            // Optionally force socket leave here too, just in case
+        };
+    }, []);
 
     // Helper for Flor check
     const hasFlor = (cards: any[]) => {
@@ -87,10 +107,14 @@ export const GameTable: React.FC<GameTableProps> = ({ gameState, playerId, gameI
             }
             if (type === "RETRUCO") available.push("CALL_VALE4");
 
-            // Fix: Allow Envido-Envido (Envido -> Envido)
             if (type === "ENVIDO") available.push("CALL_ENVIDO", "CALL_REAL_ENVIDO", "CALL_FALTA_ENVIDO");
             if (type === "ENVIDO_ENVIDO") available.push("CALL_REAL_ENVIDO", "CALL_FALTA_ENVIDO");
             if (type === "REAL_ENVIDO") available.push("CALL_FALTA_ENVIDO");
+
+            // Allow FLOR to override Envido
+            if (gameState.options.withFlor && ["ENVIDO", "ENVIDO_ENVIDO", "REAL_ENVIDO", "FALTA_ENVIDO"].includes(type)) {
+                if (hasFlor(myPlayer?.cards || [])) available.push("CALL_FLOR");
+            }
         } else {
             // Normal play actions
             if (!gameState.envidoPlayed && gameState.currentRound === 1) {
@@ -130,6 +154,8 @@ export const GameTable: React.FC<GameTableProps> = ({ gameState, playerId, gameI
     };
 
     const handlePlayCard = (card: { number: number; suit: Suit }) => {
+        if (isProcessingRef.current) return;
+        isProcessingRef.current = true;
         socket.emit('play_move', {
             gameId,
             move: { action: 'PLAY_CARD', card }
@@ -137,10 +163,13 @@ export const GameTable: React.FC<GameTableProps> = ({ gameState, playerId, gameI
     }
 
     const handleAction = (action: string) => {
+        if (isProcessingRef.current) return;
+
         // Map frontend actions to backend logic
         let finalAction = action;
         if (action === "GO_TO_DECK") finalAction = "FOLD";
 
+        isProcessingRef.current = true;
         socket.emit('play_move', {
             gameId,
             move: { action: finalAction }
@@ -152,12 +181,21 @@ export const GameTable: React.FC<GameTableProps> = ({ gameState, playerId, gameI
             {/* Table Texture */}
             <div className="absolute inset-0 pattern-grid-lg opacity-20 pointer-events-none"></div>
 
-            {/* ScoreBoard */}
-            <div className="absolute top-4 right-4 bg-black/40 backdrop-blur px-3 py-1 rounded text-xs text-slate-500 font-mono z-50">
-                ID: {gameId}
+            {/* HEADER: ID & Exit */}
+            <div className="absolute top-0 w-full p-4 flex justify-between items-start z-50 pointer-events-none">
+                <button
+                    onClick={() => setShowExitConfirm(true)}
+                    className="pointer-events-auto bg-red-900/80 hover:bg-red-800 text-white text-xs font-bold px-4 py-2 rounded-full border border-red-500/50 shadow-lg backdrop-blur"
+                >
+                    ABANDONAR 🏃
+                </button>
+                <div className="bg-black/40 backdrop-blur px-3 py-1 rounded text-xs text-slate-500 font-mono pointer-events-auto">
+                    ID: {gameId}
+                </div>
             </div>
 
-            <div className="absolute top-4 left-4 bg-black/40 backdrop-blur p-4 rounded-xl text-white shadow-lg border border-white/10 z-50">
+            {/* ScoreBoard */}
+            <div className="absolute top-12 left-4 bg-black/40 backdrop-blur p-4 rounded-xl text-white shadow-lg border border-white/10 z-50">
                 <div className="text-xs font-bold text-slate-400 mb-2">PUNTAJE</div>
                 <div className="flex space-x-6">
                     <div className="text-center">
@@ -280,7 +318,7 @@ export const GameTable: React.FC<GameTableProps> = ({ gameState, playerId, gameI
                         }
 
                         return (
-                            <Card
+                            <TrucoCard
                                 key={i}
                                 number={reveal ? card.number : 0}
                                 suit={reveal ? card.suit : "ESPADA"}
@@ -303,7 +341,7 @@ export const GameTable: React.FC<GameTableProps> = ({ gameState, playerId, gameI
                             <div key={`opp-${i}`} className="w-20 h-32 border-2 border-dashed border-white/5 rounded-lg flex items-center justify-center relative">
                                 {opponent?.playedCards[i] && (
                                     <div className="transform rotate-2 transition-all duration-500 hover:scale-110 shadow-2xl z-10">
-                                        <Card number={opponent.playedCards[i].number} suit={opponent.playedCards[i].suit} className="scale-90" />
+                                        <TrucoCard number={opponent.playedCards[i].number} suit={opponent.playedCards[i].suit} className="scale-90" />
                                     </div>
                                 )}
                             </div>
@@ -316,7 +354,7 @@ export const GameTable: React.FC<GameTableProps> = ({ gameState, playerId, gameI
                             <div key={`my-${i}`} className="w-20 h-32 border-2 border-dashed border-white/5 rounded-lg flex items-center justify-center relative">
                                 {myPlayer?.playedCards[i] && (
                                     <div className="transform -rotate-2 transition-all duration-500 hover:scale-110 shadow-2xl z-10">
-                                        <Card number={myPlayer.playedCards[i].number} suit={myPlayer.playedCards[i].suit} className="scale-90" />
+                                        <TrucoCard number={myPlayer.playedCards[i].number} suit={myPlayer.playedCards[i].suit} className="scale-90" />
                                     </div>
                                 )}
                             </div>
@@ -327,7 +365,7 @@ export const GameTable: React.FC<GameTableProps> = ({ gameState, playerId, gameI
 
             {/* Pending Challenge Alert */}
             {gameState.pendingChallenge && (
-                <div className="absolute inset-0 flex items-center justify-center z-40 bg-black/60 backdrop-blur-sm">
+                <div className="absolute inset-0 flex items-center justify-center z-40 bg-black/60">
                     <div className="bg-slate-800 p-6 rounded-2xl border border-yellow-500 text-center shadow-2xl animate-bounce-in">
                         <h2 className="text-2xl text-yellow-400 font-bold mb-2">
                             {gameState.pendingChallenge.type.replace(/_/g, " ")}!
@@ -351,6 +389,12 @@ export const GameTable: React.FC<GameTableProps> = ({ gameState, playerId, gameI
                         <div className="bg-slate-800 py-2 px-4 rounded-lg font-mono text-xl text-blue-400 tracking-wider">
                             {gameId}
                         </div>
+                        <button
+                            onClick={() => window.location.reload()}
+                            className="mt-6 text-red-400 hover:text-red-300 text-sm font-bold block mx-auto underline"
+                        >
+                            Cancelar
+                        </button>
                     </div>
                 </div>
             )}
@@ -396,6 +440,43 @@ export const GameTable: React.FC<GameTableProps> = ({ gameState, playerId, gameI
             )}
             {/* Chat Box */}
             <ChatBox socket={socket} gameId={gameId} myPlayerId={playerId} />
+
+            {/* Exit Confirmation Modal */}
+            {showExitConfirm && (
+                <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                    <div className="bg-slate-800 border-2 border-red-500/30 p-8 rounded-xl shadow-2xl max-w-sm text-center transform scale-100 animate-in fade-in zoom-in duration-200">
+                        <div className="text-4xl mb-4">🏃💨</div>
+                        <h3 className="text-2xl font-bold text-white mb-2">¿Abandonar Partida?</h3>
+                        <p className="text-slate-300 mb-8 text-sm leading-relaxed">
+                            Si sales ahora, perderás la partida y tu apuesta.
+                        </p>
+                        <div className="flex gap-4 justify-center">
+                            <button
+                                onClick={() => setShowExitConfirm(false)}
+                                className="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold transition-all"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={() => {
+                                    // Robust Exit: Wait for server Acknowledgement
+                                    const forceExit = setTimeout(() => {
+                                        window.location.href = '/';
+                                    }, 1000); // 1s fallback
+
+                                    socket.emit('leave_game', { gameId }, () => {
+                                        clearTimeout(forceExit);
+                                        window.location.href = '/';
+                                    });
+                                }}
+                                className="px-6 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg shadow-lg font-bold transition-all hover:scale-105"
+                            >
+                                Confirmar Salida
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

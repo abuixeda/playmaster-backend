@@ -1,4 +1,6 @@
 
+/// <reference types="vite/client" />
+
 // Centralized configuration for API URL
 const getApiUrl = () => {
     // Default to localhost if not set (development fallback)

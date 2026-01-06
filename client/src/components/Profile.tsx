@@ -1,4 +1,6 @@
+
 import { useEffect, useState } from 'react';
+import { KycWizard } from './auth/KycWizard';
 
 interface ProfileProps {
     onBack: () => void;
@@ -8,13 +10,15 @@ interface ProfileProps {
 interface UserProfile {
     id: string;
     username: string;
-    role?: string; // Add role
-    email: string; // Private
+    role?: string;
+    email: string;
     avatarUrl?: string;
     bio?: string;
     country?: string;
     elo: number;
-    wallet?: { balance: number }; // Private
+    kycStatus?: string; // NONE, PENDING, APPROVED
+    emailVerified?: boolean;
+    wallet?: { balance: number };
     history?: {
         id: string;
         gameType: string;
@@ -38,17 +42,13 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onAdmin }) => {
     const [profit, setProfit] = useState<ProfitMetrics | null>(null);
     const [loading, setLoading] = useState(true);
     const [editMode, setEditMode] = useState(false);
+    const [showKyc, setShowKyc] = useState(false);
+    const [error, setError] = useState<string | null>(null);
 
     // Edit Form State
     const [avatarUrl, setAvatarUrl] = useState('');
     const [bio, setBio] = useState('');
     const [country, setCountry] = useState('');
-
-    useEffect(() => {
-        loadData();
-    }, []);
-
-    const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         loadData();
@@ -84,7 +84,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onAdmin }) => {
 
             // Fetch Profit
             const resProfit = await fetch('/api/users/me/profit', { headers });
-            const profitData = await resProfit.json().catch(() => null); // Optional
+            const profitData = await resProfit.json().catch(() => null);
 
             console.log("Profile Data Loaded:", userData);
             setUser(userData);
@@ -190,7 +190,7 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onAdmin }) => {
                     </div>
 
                     {/* Info */}
-                    <div className="text-center">
+                    <div className="text-center w-full max-w-md">
                         <h2 className="text-2xl font-bold text-white leading-none mb-2">{user.username}</h2>
 
                         {!editMode ? (
@@ -200,32 +200,95 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onAdmin }) => {
                                 </span>
                                 <p className="text-purple-200/60 text-sm mt-1">{user.bio || "Sin descripción"}</p>
                                 <p className="text-purple-200/40 text-xs">📍 {user.country || "Mundo"}</p>
-                                <button onClick={() => setEditMode(true)} className="mt-2 text-xs text-blue-400 hover:text-blue-300">
-                                    Editar
+                                <button onClick={() => setEditMode(true)} className="mt-2 text-xs text-blue-400 hover:text-blue-300 font-bold bg-blue-500/10 px-4 py-1 rounded-full border border-blue-500/30">
+                                    ✏️ Editar Perfil
                                 </button>
                                 {user.role === 'ADMIN' && onAdmin && (
                                     <button onClick={onAdmin} className="mt-2 text-xs text-purple-400 hover:text-purple-300 font-bold border border-purple-500/30 px-3 py-1 rounded-full bg-purple-500/10">
                                         ⚡ Panel Admin
                                     </button>
                                 )}
+
+                                {/* KYC Status Badge / Button */}
+                                <div className="mt-3">
+                                    {user.kycStatus === 'APPROVED' ? (
+                                        <span className="text-xs text-green-400 font-bold flex items-center gap-1 border border-green-500/30 px-3 py-1 rounded-full bg-green-500/10">
+                                            🛡️ Identidad Verificada
+                                        </span>
+                                    ) : user.kycStatus === 'PENDING' ? (
+                                        <span className="text-xs text-yellow-400 font-bold flex items-center gap-1 border border-yellow-500/30 px-3 py-1 rounded-full bg-yellow-500/10">
+                                            ⏳ Verificación Pendiente
+                                        </span>
+                                    ) : (
+                                        <button
+                                            onClick={() => setShowKyc(true)}
+                                            className="text-xs text-slate-300 hover:text-white font-bold border border-slate-500/30 px-3 py-1 rounded-full bg-slate-500/10 hover:bg-slate-500/20 flex items-center gap-1 transition-colors"
+                                        >
+                                            🛡️ Verificar Identidad
+                                        </button>
+                                    )}
+                                </div>
                             </div>
                         ) : (
-                            <div className="flex flex-col gap-2 w-full max-w-xs mt-2 mx-auto">
-                                <input
-                                    className="bg-black/30 border border-white/10 rounded px-2 py-1 text-xs"
-                                    placeholder="URL de Avatar"
-                                    value={avatarUrl}
-                                    onChange={e => setAvatarUrl(e.target.value)}
-                                />
-                                <input
-                                    className="bg-black/30 border border-white/10 rounded px-2 py-1 text-xs"
-                                    placeholder="Bio corta"
-                                    value={bio}
-                                    onChange={e => setBio(e.target.value)}
-                                />
-                                <div className="flex gap-2 justify-center">
-                                    <button onClick={handleSave} className="text-green-400 text-xs font-bold">Guardar</button>
-                                    <button onClick={() => setEditMode(false)} className="text-red-400 text-xs">Cancelar</button>
+                            <div className="flex flex-col gap-4 w-full bg-slate-900/90 p-6 rounded-2xl border border-blue-500/30 shadow-xl mt-4 animate-fade-in-up">
+                                <h3 className="text-sm font-bold text-blue-300 uppercase text-left">Editar Perfil</h3>
+
+                                {/* Avatar Selection */}
+                                <div className="flex flex-col gap-2">
+                                    <label className="text-xs text-slate-400 text-left">Elige un Avatar:</label>
+                                    <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin">
+                                        {[
+                                            "https://api.dicebear.com/7.x/avataaars/svg?seed=Felix",
+                                            "https://api.dicebear.com/7.x/avataaars/svg?seed=Aneka",
+                                            "https://api.dicebear.com/7.x/bottts/svg?seed=Robot",
+                                            "https://api.dicebear.com/7.x/micah/svg?seed=Artist",
+                                            "https://api.dicebear.com/7.x/adventurer/svg?seed=Traveler"
+                                        ].map(url => (
+                                            <img
+                                                key={url}
+                                                src={url}
+                                                className={`w-10 h-10 rounded-full cursor-pointer hover:scale-110 transition-transform ${avatarUrl === url ? 'ring-2 ring-yellow-400 bg-white/10' : 'opacity-70'}`}
+                                                onClick={() => setAvatarUrl(url)}
+                                            />
+                                        ))}
+                                    </div>
+                                    <label className="text-xs text-slate-400 text-left mt-1">O pega tu propia URL:</label>
+                                    <input
+                                        className="bg-black/40 border border-white/10 rounded px-2 py-2 text-xs text-white focus:border-blue-500 outline-none transition-colors"
+                                        placeholder="https://..."
+                                        value={avatarUrl}
+                                        onChange={e => setAvatarUrl(e.target.value)}
+                                    />
+                                </div>
+
+                                <div className="space-y-1 text-left">
+                                    <label className="text-xs text-slate-400">Bio:</label>
+                                    <textarea
+                                        className="w-full bg-black/40 border border-white/10 rounded px-2 py-2 text-xs text-white focus:border-blue-500 outline-none resize-none h-16"
+                                        placeholder="Cuéntanos algo sobre ti..."
+                                        value={bio}
+                                        onChange={e => setBio(e.target.value)}
+                                    />
+                                </div>
+                                <div className="space-y-1 text-left">
+                                    <label className="text-xs text-slate-400">País:</label>
+                                    <select
+                                        className="w-full bg-black/40 border border-white/10 rounded px-2 py-2 text-xs text-white focus:border-blue-500 outline-none"
+                                        value={country}
+                                        onChange={e => setCountry(e.target.value)}
+                                    >
+                                        <option value="">Seleccionar País...</option>
+                                        <option value="Argentina">Argentina</option>
+                                        <option value="Brasil">Brasil</option>
+                                        <option value="Uruguay">Uruguay</option>
+                                        <option value="Chile">Chile</option>
+                                        <option value="Mundo">Otro / Mundo</option>
+                                    </select>
+                                </div>
+
+                                <div className="flex gap-2 pt-2">
+                                    <button onClick={handleSave} className="flex-1 bg-blue-600 hover:bg-blue-500 py-2 rounded-lg text-xs font-bold transition-colors">Guardar Cambios</button>
+                                    <button onClick={() => setEditMode(false)} className="flex-1 bg-white/5 hover:bg-white/10 py-2 rounded-lg text-xs transition-colors">Cancelar</button>
                                 </div>
                             </div>
                         )}
@@ -290,6 +353,17 @@ export const Profile: React.FC<ProfileProps> = ({ onBack, onAdmin }) => {
                 </div>
 
             </div>
+
+            {showKyc && (
+                <KycWizard
+                    onClose={() => setShowKyc(false)}
+                    onComplete={() => {
+                        setShowKyc(false);
+                        // Mock update local status to PENDING
+                        setUser({ ...user!, kycStatus: 'PENDING' });
+                    }}
+                />
+            )}
         </div>
     );
 };

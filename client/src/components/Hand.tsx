@@ -1,7 +1,7 @@
 
 import React from 'react';
-import { Card } from './Card';
-import type { Suit } from './Card';
+import { TrucoCard } from './TrucoCard';
+import type { Suit } from './TrucoCard';
 
 interface HandProps {
     cards: { number: number; suit: Suit, value: number }[];
@@ -14,7 +14,7 @@ export const Hand: React.FC<HandProps> = ({ cards, onPlayCard, isCurrentTurn }) 
         <div className={`flex justify-center space-x-2 -space-x-4 transition-opacity ${isCurrentTurn ? 'opacity-100' : 'opacity-70 grayscale'}`}>
             {cards.map((card, _idx) => (
                 <div key={`${card.number}-${card.suit}`} className="transform transition-transform hover:z-10">
-                    <Card
+                    <TrucoCard
                         number={card.number}
                         suit={card.suit as Suit}
                         onClick={() => isCurrentTurn && onPlayCard(card)}

@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
 import { Socket } from 'socket.io-client';
+import { AuthWizard } from '../auth/AuthWizard';
 import { Play, Swords, Gamepad2, Plus, Crown, TrendingUp } from 'lucide-react';
 import thumbTruco from '../../assets/thumb_truco.png';
 import thumbChess from '../../assets/thumb_chess.png';
 import thumbRPS from '../../assets/thumb_rps_real.png';
+import thumbConnect4 from '../../assets/thumb_connect4.png';
 import thumbRandom from '../../assets/thumb_random.png';
 
 interface GameHubProps {
-    onJoin: (gameId: string, playerId: string, gameType?: string) => void;
+    onJoin: (gameId: string, playerId: string, gameType?: string, options?: any) => void;
     socket: Socket;
 }
 
@@ -29,6 +31,28 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
     const [isSearching, setIsSearching] = useState(false);
     const [betAmount, setBetAmount] = useState<number>(100);
     const [isCustomBet, setIsCustomBet] = useState(false);
+    const [selectedPlayers, setSelectedPlayers] = useState<number>(2);
+
+    // Truco Options
+    const [trucoPoints, setTrucoPoints] = useState<15 | 30>(30);
+    const [trucoFlor, setTrucoFlor] = useState<boolean>(true);
+
+    // Private Game State
+    const [gameIdInput, setGameIdInput] = useState('');
+
+    const handleJoin = () => {
+        const idToUse = authUser?.id || (socket.id ? `guest_${socket.id.substring(0, 5)}` : 'guest');
+        if (!gameIdInput) return alert('Ingressa el ID de la sala');
+        const maxPlayers = selectedGame === 'EL_UNICO' ? selectedPlayers : undefined;
+        onJoin(gameIdInput.toUpperCase(), idToUse, selectedGame || 'TRUCO', { maxPlayers });
+    };
+
+    const handleCreate = () => {
+        const idToUse = authUser?.id || (socket.id ? `guest_${socket.id.substring(0, 5)}` : 'guest');
+        const newGameId = Math.random().toString(36).substring(2, 8).toUpperCase();
+        const maxPlayers = selectedGame === 'EL_UNICO' ? selectedPlayers : undefined;
+        onJoin(newGameId, idToUse, selectedGame || 'TRUCO', { maxPlayers });
+    };
 
     // Fetch Balance on Mount
     useEffect(() => {
@@ -38,6 +62,15 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
             try {
                 const API_URL = import.meta.env.VITE_API_URL || '';
                 const res = await fetch(`${API_URL}/api/wallet/me`, { headers: { Authorization: `Bearer ${token}` } });
+
+                if (res.status === 401) {
+                    console.warn("Token expired/invalid. Logging out.");
+                    localStorage.removeItem('token');
+                    localStorage.removeItem('user');
+                    window.location.reload();
+                    return;
+                }
+
                 const data = await res.json();
                 if (data.balance !== undefined) setBalance(data.balance);
             } catch (e) { console.error("Wallet fetch error", e); }
@@ -50,7 +83,7 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
     const [authMode, setAuthMode] = useState<'LOGIN' | 'REGISTER'>('LOGIN');
     const [authEmail, setAuthEmail] = useState('');
     const [authPass, setAuthPass] = useState('');
-    const [authName, setAuthName] = useState('');
+    const [authName] = useState('');
 
     const handleAuth = async () => {
         if (!authEmail || !authPass) return alert("Completa los campos");
@@ -91,8 +124,11 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
             alert(data.message || "Error al buscar partida");
         });
         socket.on("match_found", (data) => {
+            // Allow join even if no authUser
             if (authUser) {
-                onJoin(data.gameId, authUser.id || "guest", data.gameType);
+                onJoin(data.gameId, authUser.id!, data.gameType);
+            } else {
+                onJoin(data.gameId, "guest_player", data.gameType);
             }
         });
 
@@ -106,10 +142,17 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
 
     const handlePlayParams = (gameType: string) => {
         setSelectedGame(gameType);
+        setSelectedPlayers(2); // Reset to default
     };
 
     const confirmSearch = () => {
         if (!selectedGame) return;
+
+        // Auth check for betting
+        if (betAmount > 0 && !authUser) {
+            alert("Debes iniciar sesión para apostar dinero real. Juega por $0 o crea una sala privada.");
+            return;
+        }
 
         // Handle Random Game Selection
         let gameToSearch = selectedGame;
@@ -118,17 +161,30 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
             gameToSearch = activeGames[Math.floor(Math.random() * activeGames.length)];
         }
 
+
+        const maxPlayers = gameToSearch === 'EL_UNICO' ? selectedPlayers : undefined;
+
+        // Prepare options
+        const options: any = { maxPlayers };
+        if (gameToSearch === 'TRUCO') {
+            options.targetScore = trucoPoints;
+            options.withFlor = trucoFlor;
+        }
+
         socket.emit("find_match", {
             gameType: gameToSearch,
-            betAmount: betAmount
+            betAmount: betAmount,
+            options: options
         });
     };
 
     const games = [
-        { id: 'TRUCO', name: 'Truco Argentino', image: thumbTruco, active: true },
-        { id: 'CHESS', name: 'Ajedrez Táctico', image: thumbChess, active: true },
-        { id: 'RPS', name: 'Piedra Papel Tijera', image: thumbRPS, active: true },
-        { id: 'RANDOM', name: 'Juego Aleatorio', image: thumbRandom, active: true }, // Replaces Pool
+        { id: 'TRUCO', name: 'Truco', subtitle: 'ARGENTINO', image: thumbTruco, active: true },
+        { id: 'CHESS', name: 'Ajedrez', subtitle: 'TÁCTICO', image: thumbChess, active: true },
+        { id: 'CONNECT4', name: '4 en Línea', subtitle: 'CLÁSICO', image: thumbConnect4, active: true },
+        { id: 'EL_UNICO', name: 'El Único', subtitle: 'CARTAS', image: '/el_unico_cover.png', active: true },
+        { id: 'RPS', name: 'Piedra', subtitle: 'PAPEL TIJERA', image: thumbRPS, active: true },
+        { id: 'RANDOM', name: 'Aleatorio', subtitle: 'SORPRESA', image: thumbRandom, active: true },
     ];
 
     if (selectedGame && isSearching) {
@@ -150,7 +206,7 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
                         {selectedGame === 'RANDOM' ? 'Tirando los dados...' : 'Buscando Rival...'}
                     </h2>
                     <p className="text-purple-200/60 mt-2">
-                        {selectedGame === 'RANDOM' ? 'Sorpresa' : selectedGame} • ${betAmount}
+                        {games.find(g => g.id === selectedGame)?.name} • {betAmount === 0 ? 'GRATIS' : `$${betAmount}`}
                     </p>
                 </div>
                 <button
@@ -180,9 +236,104 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
                     </div>
                 </div>
 
+                {/* Truco Options */}
+                {
+                    selectedGame === 'TRUCO' && (
+                        <div className="mb-6 bg-[--color-surface-glass] p-4 rounded-2xl border border-[--color-surface-glass-border]">
+                            <h3 className="text-center text-purple-200/80 font-bold text-sm mb-4 border-b border-white/5 pb-2 mx-4 uppercase tracking-wider">Ajustes de Partida</h3>
+
+                            <div className="flex flex-col gap-4">
+                                {/* Flor Option */}
+                                <div className="flex items-center justify-between">
+                                    <span className="text-white text-sm font-bold w-20">Flor</span>
+                                    <div className="flex-1 flex bg-black/40 rounded-xl p-1 border border-white/5 relative">
+                                        <button
+                                            onClick={() => setTrucoFlor(true)}
+                                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${trucoFlor
+                                                ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
+                                                : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                        >
+                                            CON FLOR
+                                        </button>
+                                        <button
+                                            onClick={() => setTrucoFlor(false)}
+                                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${!trucoFlor
+                                                ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
+                                                : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                        >
+                                            SIN FLOR
+                                        </button>
+                                    </div>
+                                    <div className="w-8 ml-2 flex justify-center">
+                                        <div className="w-5 h-5 rounded-full border border-white/20 flex items-center justify-center text-gray-400 text-[10px] font-bold cursor-help hover:bg-white/10 hover:text-white transition-colors" title="Con Flor: Se puede cantar flor si tienes 3 cartas del mismo palo">?</div>
+                                    </div>
+                                </div>
+
+                                {/* Points Option */}
+                                <div className="flex items-center justify-between">
+                                    <span className="text-white text-sm font-bold w-20">Puntos</span>
+                                    <div className="flex-1 flex bg-black/40 rounded-xl p-1 border border-white/5 relative">
+                                        <button
+                                            onClick={() => setTrucoPoints(15)}
+                                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${trucoPoints === 15
+                                                ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
+                                                : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                        >
+                                            A 15
+                                        </button>
+                                        <button
+                                            onClick={() => setTrucoPoints(30)}
+                                            className={`flex-1 py-1.5 rounded-lg text-xs font-bold transition-all ${trucoPoints === 30
+                                                ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/40'
+                                                : 'text-gray-400 hover:text-white hover:bg-white/5'}`}
+                                        >
+                                            A 30
+                                        </button>
+                                    </div>
+                                    <div className="w-8 ml-2 flex justify-center">
+                                        <div className="w-5 h-5 rounded-full border border-white/20 flex items-center justify-center text-gray-400 text-[10px] font-bold cursor-help hover:bg-white/10 hover:text-white transition-colors" title="Puntos para ganar la partida">?</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    )
+                }
+
+                {/* EL UNICO Player Count Selection */}
+                {
+                    selectedGame === 'EL_UNICO' && (
+                        <div className="mb-6">
+                            <p className="text-purple-200/60 mb-2 text-sm">Modo de Juego</p>
+                            <div className="grid grid-cols-2 gap-3">
+                                <button
+                                    onClick={() => setSelectedPlayers(2)}
+                                    className={`p-4 rounded-xl border transition-all flex flex-col items-center justify-center gap-1 ${selectedPlayers === 2
+                                        ? 'bg-yellow-600 border-yellow-400 text-white shadow-lg'
+                                        : 'bg-[--color-surface-glass] border-[--color-surface-glass-border] text-purple-200/60 hover:bg-white/5'
+                                        }`}
+                                >
+                                    <span className="text-xl">⚔️</span>
+                                    <span className="font-bold text-sm">Duelo (1v1)</span>
+                                </button>
+                                <button
+                                    onClick={() => setSelectedPlayers(6)}
+                                    className={`p-4 rounded-xl border transition-all flex flex-col items-center justify-center gap-1 ${selectedPlayers === 6
+                                        ? 'bg-purple-600 border-purple-400 text-white shadow-lg'
+                                        : 'bg-[--color-surface-glass] border-[--color-surface-glass-border] text-purple-200/60 hover:bg-white/5'
+                                        }`}
+                                >
+                                    <span className="text-xl">👥</span>
+                                    <span className="font-bold text-sm">Multijugador (3-6)</span>
+                                </button>
+                            </div>
+                        </div>
+                    )
+                }
+
                 <p className="text-purple-200/60 mb-6 text-sm">Seleccioná el monto de la apuesta</p>
 
                 <div className="grid grid-cols-2 gap-3 mb-8">
+
                     {[100, 500, 1000, 2000].map(amt => (
                         <button
                             key={amt}
@@ -230,6 +381,8 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
                     </div>
                 </div>
 
+
+
                 <div className="mt-auto">
                     <button
                         onClick={confirmSearch}
@@ -239,7 +392,34 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
                         JUGAR AHORA
                     </button>
                 </div>
-            </div>
+
+                <div className="mt-6 border-t border-white/10 pt-4">
+                    <h3 className="text-white font-bold mb-3 text-sm">Sala Privada (Jugar con Amigos)</h3>
+                    <div className="grid grid-cols-2 gap-3">
+                        <button
+                            onClick={handleCreate}
+                            className="bg-purple-600 hover:bg-purple-500 text-white font-bold py-3 rounded-xl transition-all text-sm shadow-lg shadow-purple-900/40"
+                        >
+                            CREAR SALA
+                        </button>
+                        <div className="flex gap-2">
+                            <input
+                                type="text"
+                                className="w-full bg-slate-800/50 border border-slate-600 rounded-l-xl px-2 py-2 text-white placeholder-slate-500 text-center uppercase font-mono text-sm focus:outline-none focus:border-purple-500"
+                                placeholder="CÓDIGO"
+                                value={gameIdInput}
+                                onChange={(e) => setGameIdInput(e.target.value)}
+                            />
+                            <button
+                                onClick={handleJoin}
+                                className="bg-slate-700 hover:bg-slate-600 text-white font-semibold py-2 px-3 rounded-r-xl text-sm border-l border-slate-600"
+                            >
+                                Unirse
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div >
         );
     }
 
@@ -288,50 +468,78 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
                 </div>
             </div>
 
-            {/* Login Modal */}
-            {
-                showLogin && (
-                    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                        <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl w-full max-w-sm shadow-2xl animate-fade-in">
+            {/* Login Modal / Auth Wizard */}
+            {showLogin && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-fade-in">
+                    {authMode === 'REGISTER' ? (
+                        <AuthWizard
+                            onClose={() => setShowLogin(false)}
+                            onLoginSuccess={() => {
+                                setShowLogin(false);
+                                window.location.reload();
+                            }}
+                        />
+                    ) : (
+                        <div className="bg-slate-900 border border-white/10 p-6 rounded-2xl w-full max-w-sm shadow-2xl">
                             <h2 className="text-xl font-bold text-white mb-4 text-center">
-                                {authMode === 'LOGIN' ? 'Iniciar Sesión' : 'Crear Cuenta'}
+                                Iniciar Sesión
                             </h2>
 
                             <div className="flex gap-2 mb-4 bg-slate-800 p-1 rounded-lg">
-                                <button onClick={() => setAuthMode('LOGIN')} className={`flex-1 py-1 text-xs font-bold rounded-md transition-colors ${authMode === 'LOGIN' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}>Login</button>
-                                <button onClick={() => setAuthMode('REGISTER')} className={`flex-1 py-1 text-xs font-bold rounded-md transition-colors ${authMode === 'REGISTER' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}>Registro</button>
+                                <button
+                                    onClick={() => setAuthMode('LOGIN')}
+                                    className={`flex-1 py-1 text-xs font-bold rounded-md transition-colors ${authMode === 'LOGIN' ? 'bg-purple-600 text-white' : 'text-slate-400 hover:text-white'}`}
+                                >
+                                    Login
+                                </button>
+                                <button
+                                    onClick={() => setAuthMode('REGISTER')}
+                                    className={`flex-1 py-1 text-xs font-bold rounded-md transition-colors text-slate-400 hover:text-white`}
+                                >
+                                    Registro
+                                </button>
                             </div>
 
                             <div className="space-y-3">
-                                {authMode === 'REGISTER' && (
-                                    <div>
-                                        <label className="text-[10px] text-slate-400 uppercase font-bold">Usuario</label>
-                                        <input className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm focus:border-purple-500 outline-none"
-                                            value={authName} onChange={e => setAuthName(e.target.value)} placeholder="Ej. Master99" />
-                                    </div>
-                                )}
                                 <div>
                                     <label className="text-[10px] text-slate-400 uppercase font-bold">Email o Usuario</label>
-                                    <input className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm focus:border-purple-500 outline-none"
-                                        value={authEmail} onChange={e => setAuthEmail(e.target.value)} placeholder="tu@email.com" />
+                                    <input
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm focus:border-purple-500 outline-none"
+                                        value={authEmail}
+                                        onChange={e => setAuthEmail(e.target.value)}
+                                        placeholder="tu@email.com"
+                                    />
                                 </div>
                                 <div>
                                     <label className="text-[10px] text-slate-400 uppercase font-bold">Contraseña</label>
-                                    <input type="password" className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm focus:border-purple-500 outline-none"
-                                        value={authPass} onChange={e => setAuthPass(e.target.value)} placeholder="******" />
+                                    <input
+                                        type="password"
+                                        className="w-full bg-slate-800 border border-slate-700 rounded-lg p-2 text-white text-sm focus:border-purple-500 outline-none"
+                                        value={authPass}
+                                        onChange={e => setAuthPass(e.target.value)}
+                                        placeholder="******"
+                                    />
                                 </div>
                             </div>
 
                             <div className="flex gap-3 mt-6">
-                                <button onClick={() => setShowLogin(false)} className="flex-1 py-2 rounded-xl bg-slate-800 text-slate-400 text-sm font-bold hover:bg-slate-700">Cancelar</button>
-                                <button onClick={handleAuth} className="flex-1 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-bold hover:scale-[1.02] transition-transform">
+                                <button
+                                    onClick={() => setShowLogin(false)}
+                                    className="flex-1 py-2 rounded-xl bg-slate-800 text-slate-400 text-sm font-bold hover:bg-slate-700"
+                                >
+                                    Cancelar
+                                </button>
+                                <button
+                                    onClick={handleAuth}
+                                    className="flex-1 py-2 rounded-xl bg-gradient-to-r from-purple-600 to-blue-600 text-white text-sm font-bold hover:scale-[1.02] transition-transform"
+                                >
                                     Confirmar
                                 </button>
                             </div>
                         </div>
-                    </div>
-                )
-            }
+                    )}
+                </div>
+            )}
 
             {/* Featured Section */}
             <div>
@@ -355,8 +563,8 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
                             )}
                             <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent"></div>
                             <div className="absolute bottom-0 left-0 w-full p-3">
-                                <h4 className="text-lg font-bold text-white leading-tight shadow-black drop-shadow-md">{game.name.split(' ')[0]}</h4>
-                                <p className="text-[10px] text-gray-300 uppercase tracking-wider">{game.name.split(' ').slice(1).join(' ')}</p>
+                                <h4 className="text-lg font-bold text-white leading-tight shadow-black drop-shadow-md">{game.name}</h4>
+                                <p className="text-[10px] text-gray-300 uppercase tracking-wider">{game.subtitle}</p>
                                 {game.active && <div className="mt-2 flex items-center gap-1.5">
                                     <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse"></div>
                                     <span className="text-[10px] text-green-300 font-medium">Online</span>
@@ -407,4 +615,3 @@ export function GameHub({ onJoin, socket }: GameHubProps) {
         </div >
     );
 }
-

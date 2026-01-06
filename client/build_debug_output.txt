@@ -1,0 +1,38 @@
+STDOUT:
+src/components/auth/AuthWizard.tsx(5,10): error TS6133: 'ShieldCheck' is declared but its value is never read.
+src/components/auth/AuthWizard.tsx(12,39): error TS6133: 'onLoginSuccess' is declared but its value is never read.
+src/components/CardPreview.tsx(2,1): error TS6133: 'React' is declared but its value is never read.
+src/components/CardPreview.tsx(57,29): error TS2322: Type '{ number: number; suit: "ESPADA"; debugScale: number; debugBorderRadius: number; }' is not assignable to type 'IntrinsicAttributes & TrucoCardProps'.
+  Property 'debugScale' does not exist on type 'IntrinsicAttributes & TrucoCardProps'.
+src/components/CardPreview.tsx(69,29): error TS2322: Type '{ number: number; suit: "ESPADA"; debugScale: number; debugBorderRadius: number; }' is not assignable to type 'IntrinsicAttributes & TrucoCardProps'.
+  Property 'debugScale' does not exist on type 'IntrinsicAttributes & TrucoCardProps'.
+src/components/ChessGame.tsx(226,35): error TS6133: 'opponentColor' is declared but its value is never read.
+src/components/Connect4Game.tsx(17,12): error TS6133: 'timeLeft' is declared but its value is never read.
+src/components/Connect4Game.tsx(17,22): error TS6133: 'setTimeLeft' is declared but its value is never read.
+src/components/layout/Sidebar.tsx(2,24): error TS6133: 'PlusCircle' is declared but its value is never read.
+src/components/Lobby.tsx(37,25): error TS6133: 'setTrucoPoints' is declared but its value is never read.
+src/components/Lobby.tsx(38,23): error TS6133: 'setTrucoFlor' is declared but its value is never read.
+src/components/PublicProfile.tsx(3,26): error TS6133: 'Shield' is declared but its value is never read.
+src/components/PublicProfile.tsx(3,47): error TS6133: 'Activity' is declared but its value is never read.
+src/components/PublicProfile.tsx(3,92): error TS6133: 'TrendingUp' is declared but its value is never read.
+src/components/PublicProfile.tsx(3,104): error TS6133: 'DollarSign' is declared but its value is never read.
+src/components/Rooms.tsx(4,10): error TS6133: 'Filter' is declared but its value is never read.
+src/components/Rooms.tsx(4,31): error TS6133: 'Dices' is declared but its value is never read.
+src/components/Rooms.tsx(4,38): error TS6133: 'Layers' is declared but its value is never read.
+src/components/Rooms.tsx(4,46): error TS6133: 'Trophy' is declared but its value is never read.
+src/components/Rooms.tsx(4,54): error TS6133: 'Scissors' is declared but its value is never read.
+src/components/Rooms.tsx(4,64): error TS6133: 'User' is declared but its value is never read.
+src/components/StoreModal.tsx(52,15): error TS6133: 'amountCents' is declared but its value is never read.
+src/components/views/AdminDashboard.tsx(2,10): error TS6133: 'Users' is declared but its value is never read.
+src/components/views/AdminDashboard.tsx(2,55): error TS6133: 'ChevronDown' is declared but its value is never read.
+src/components/views/AdminDashboard.tsx(2,68): error TS6133: 'ArrowUpRight' is declared but its value is never read.
+src/components/views/AdminDashboard.tsx(2,82): error TS6133: 'ArrowDownLeft' is declared but its value is never read.
+src/components/views/GameHub.tsx(82,22): error TS6133: 'setAuthName' is declared but its value is never read.
+src/components/views/GameHub.tsx(418,110): error TS2367: This comparison appears to be unintentional because the types '"LOGIN"' and '"REGISTER"' have no overlap.
+
+
+STDERR:
+
+
+ERROR:
+Command failed: npx tsc -b

@@ -40,6 +40,7 @@ export const RPSGame: React.FC<RPSGameProps> = ({ gameState, playerId, gameId, s
 
     // Disconnect Timer State
     const [disconnectTimer, setDisconnectTimer] = useState(30);
+    const [showExitConfirm, setShowExitConfirm] = useState(false);
 
     useEffect(() => {
         const handleDisconnect = ({ playerId: disconnectedId }: { playerId: string }) => {
@@ -220,9 +221,16 @@ export const RPSGame: React.FC<RPSGameProps> = ({ gameState, playerId, gameId, s
     return (
         <div className="flex flex-col items-center justify-center min-h-screen bg-slate-900 text-white p-4 font-sans selection:bg-purple-500/30">
             {/* Header */}
-            <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-center text-sm text-slate-500 font-mono">
-                <div>SALA: {gameId}</div>
-                <div>JUGADOR: {playerId.slice(0, 6)}...</div>
+            <div className="absolute top-0 left-0 w-full p-4 flex justify-between items-center text-sm text-slate-500 font-mono z-50">
+                <button
+                    onClick={() => setShowExitConfirm(true)}
+                    className="bg-red-500/10 hover:bg-red-500/20 text-red-400 text-xs font-bold px-4 py-2 rounded-full border border-red-500/20 transition-all"
+                >
+                    SALIR
+                </button>
+                <div className="flex gap-4">
+                    <div>SALA: {gameId}</div>
+                </div>
             </div>
 
             {/* ROUND TIMER */}
@@ -406,6 +414,36 @@ export const RPSGame: React.FC<RPSGameProps> = ({ gameState, playerId, gameId, s
             </div>
             {/* Chat Box */}
             <ChatBox socket={socket} gameId={gameId} myPlayerId={playerId} />
+
+            {/* Exit Confirmation Modal */}
+            {showExitConfirm && (
+                <div className="absolute inset-0 z-[100] flex items-center justify-center bg-black/80 backdrop-blur-sm">
+                    <div className="bg-slate-800 border-2 border-slate-700 p-8 rounded-xl shadow-2xl max-w-sm text-center transform scale-100 animate-in fade-in zoom-in duration-200">
+                        <div className="text-4xl mb-4">🚪</div>
+                        <h3 className="text-2xl font-bold text-white mb-2">¿Salir de la Sala?</h3>
+                        <p className="text-slate-400 mb-8 text-sm leading-relaxed">
+                            Si la partida está en curso, podrías perder tu apuesta.
+                        </p>
+                        <div className="flex gap-4 justify-center">
+                            <button
+                                onClick={() => setShowExitConfirm(false)}
+                                className="px-6 py-2.5 bg-slate-700 hover:bg-slate-600 text-white rounded-lg font-bold transition-all"
+                            >
+                                Cancelar
+                            </button>
+                            <button
+                                onClick={() => {
+                                    socket.emit('leave_game', { gameId });
+                                    window.location.href = '/';
+                                }}
+                                className="px-6 py-2.5 bg-red-600 hover:bg-red-500 text-white rounded-lg shadow-lg font-bold transition-all hover:scale-105"
+                            >
+                                Salir
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

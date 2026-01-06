@@ -6,7 +6,7 @@ import { API_URL } from '../config';
 import { Socket } from 'socket.io-client';
 
 interface LobbyProps {
-    onJoin: (gameId: string, playerId: string, gameType?: string) => void;
+    onJoin: (gameId: string, playerId: string, gameType?: string, options?: any) => void;
     onOpenProfile?: () => void;
     socket: Socket;
 }
@@ -31,6 +31,15 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoin, onOpenProfile, socket }) =
     const [playerName, setPlayerName] = useState('');
     const [gameId, setGameId] = useState('');
     const [selectedGame, setSelectedGame] = useState('TRUCO');
+    const [selectedPlayers, setSelectedPlayers] = useState<number | 'RANDOM'>(2);
+
+    // Truco Options
+    const [trucoPoints, setTrucoPoints] = useState<15 | 30>(30);
+    const [trucoFlor, setTrucoFlor] = useState<boolean>(true);
+
+
+    // ... (rest of code) ...
+
 
     const handleAuth = async () => {
         if (!authEmail || !authPass) return alert("Completa los campos");
@@ -142,14 +151,30 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoin, onOpenProfile, socket }) =
         }
     }, []);
 
+    const getFinalMaxPlayers = () => {
+        // Simple pass-through (Random removed per new requirement)
+        if (selectedPlayers === 'RANDOM') return 6; // Fallback
+        return selectedPlayers;
+    };
+
     const handleFindMatch = () => {
         if (!betAmount) return alert("Seleccioná un monto de apuesta");
         // Ensure auth
         if (!authUser) return alert("Debes iniciar sesión para apostar");
 
+        const maxPlayers = selectedGame === 'EL_UNICO' ? getFinalMaxPlayers() : undefined;
+
+        // Prepare options
+        const options: any = { maxPlayers };
+        if (selectedGame === 'TRUCO') {
+            options.targetScore = trucoPoints;
+            options.withFlor = trucoFlor;
+        }
+
         socket.emit("find_match", {
             gameType: selectedGame,
-            betAmount: betAmount
+            betAmount: betAmount,
+            options: options
         });
     };
 
@@ -179,7 +204,9 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoin, onOpenProfile, socket }) =
 
         // Generate random 6-char ID
         const newGameId = Math.random().toString(36).substring(2, 8).toUpperCase();
-        onJoin(newGameId, idToUse, selectedGame);
+
+        const maxPlayers = selectedGame === 'EL_UNICO' ? getFinalMaxPlayers() : undefined;
+        onJoin(newGameId, idToUse, selectedGame, { maxPlayers });
     };
 
     return (
@@ -310,8 +337,55 @@ export const Lobby: React.FC<LobbyProps> = ({ onJoin, onOpenProfile, socket }) =
                                         <span className="text-4xl">✂️</span>
                                         <span className="font-bold">PPT</span>
                                     </button>
+                                    <button
+                                        onClick={() => setSelectedGame('EL_UNICO')}
+                                        className={`p-4 rounded-xl border transition-all flex flex-col items-center justify-center gap-2 aspect-square ${selectedGame === 'EL_UNICO'
+                                            ? 'border-yellow-500 bg-yellow-500/20 text-white shadow-lg shadow-yellow-900/40 scale-105'
+                                            : 'border-slate-700 bg-slate-800/50 text-slate-400 hover:border-slate-500'
+                                            }`}
+                                    >
+                                        <div className="w-16 h-16 rounded-lg overflow-hidden mb-1 shadow-md border border-white/10">
+                                            <img src="/el_unico_cover.png" alt="El Unico" className="w-full h-full object-cover" />
+                                        </div>
+                                        <span className="font-bold">El Único</span>
+                                    </button>
                                 </div>
                             </div>
+
+                            {/* EL UNICO Options (Simplified) */}
+                            {selectedGame === 'EL_UNICO' && (
+                                <div className="mt-4 animate-fade-in grid grid-cols-2 gap-3">
+                                    {/* Duel Option (2 Players) */}
+                                    <button
+                                        onClick={() => setSelectedPlayers(2)}
+                                        className={`p-3 rounded-xl border transition-all flex flex-col items-center justify-center gap-1 ${selectedPlayers === 2
+                                            ? 'bg-yellow-600 border-yellow-400 text-white shadow-lg'
+                                            : 'bg-slate-800 border-slate-600 text-slate-400 hover:bg-slate-700'
+                                            }`}
+                                    >
+                                        <span className="text-xl">⚔️</span>
+                                        <div className="text-center">
+                                            <span className="block font-bold text-sm">Duelo</span>
+                                            <span className="text-[10px] opacity-70">2 Jugadores</span>
+                                        </div>
+                                    </button>
+
+                                    {/* Multiplayer Option (Max 6) */}
+                                    <button
+                                        onClick={() => setSelectedPlayers(6)}
+                                        className={`p-3 rounded-xl border transition-all flex flex-col items-center justify-center gap-1 ${selectedPlayers === 6
+                                            ? 'bg-purple-600 border-purple-400 text-white shadow-lg'
+                                            : 'bg-slate-800 border-slate-600 text-slate-400 hover:bg-slate-700'
+                                            }`}
+                                    >
+                                        <span className="text-xl">👥</span>
+                                        <div className="text-center">
+                                            <span className="block font-bold text-sm">Multijugador</span>
+                                            <span className="text-[10px] opacity-70">3-6 Jugadores</span>
+                                        </div>
+                                    </button>
+                                </div>
+                            )}
                         </div>
 
                         {/* RIGHT COL: Actions */}

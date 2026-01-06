@@ -1,6 +1,5 @@
 
-import { Home, Search, PlusCircle, MessageCircle, User, LogOut } from 'lucide-react';
-
+import { Home, Search, PlusCircle, MessageCircle, User, LogOut, Dices } from 'lucide-react';
 
 interface SidebarProps {
     currentView: string;
@@ -12,7 +11,7 @@ export function Sidebar({ currentView, onChangeView, user }: SidebarProps) {
     const navItems = [
         { id: 'LOBBY', icon: Home, label: 'Inicio' },
         { id: 'EXPLORE', icon: Search, label: 'Explorar' },
-        { id: 'CREATE', icon: PlusCircle, label: 'Crear', isAction: true },
+        { id: 'ROOMS', icon: Dices, label: 'Salas' },
         { id: 'CHAT', icon: MessageCircle, label: 'Chat' },
         { id: 'PROFILE', icon: User, label: 'Perfil' },
     ];
