@@ -1,4 +1,4 @@
-import { Home, Search, PlusCircle, MessageCircle, User } from 'lucide-react';
+import { Home, Search, MessageCircle, User, Dices } from 'lucide-react';
 
 interface BottomNavProps {
     currentView: string;
@@ -7,11 +7,11 @@ interface BottomNavProps {
 
 export function BottomNav({ currentView, onChangeView }: BottomNavProps) {
     const navItems = [
-        { id: 'LOBBY', icon: Home, label: 'Home' },
-        { id: 'EXPLORE', icon: Search, label: 'Explore' },
-        { id: 'CREATE', icon: PlusCircle, label: 'Create', isAction: true }, // Special styling for center button
+        { id: 'LOBBY', icon: Home, label: 'Inicio' },
+        { id: 'EXPLORE', icon: Search, label: 'Explorar' },
+        { id: 'ROOMS', icon: Dices, label: 'Salas', isAction: true }, // Keeping action style for prominence
         { id: 'CHAT', icon: MessageCircle, label: 'Chat' },
-        { id: 'PROFILE', icon: User, label: 'Profile' },
+        { id: 'PROFILE', icon: User, label: 'Perfil' },
     ];
 
     return (
